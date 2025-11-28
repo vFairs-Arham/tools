@@ -1,0 +1,66 @@
+/* results.css */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Beautiful Tree Styles */
+.tree-step {
+    position: relative;
+    padding-bottom: 2rem;
+    border-left: 2px solid #e2e8f0;
+    /* slate-200 */
+    padding-left: 1.5rem;
+}
+
+.tree-step:last-child {
+    border-left: transparent;
+}
+
+.tree-step::before {
+    content: '';
+    position: absolute;
+    left: -9px;
+    /* Half of width (16px) + border (2px) approx */
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid #0284c7;
+    /* sky-600 */
+}
+
+.tree-question {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.tree-answer {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 1rem;
+}
+
+/* Admin Table Styles */
+#admin-table-body tr:hover {
+    background-color: #f8fafc;
+}
