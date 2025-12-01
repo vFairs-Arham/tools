@@ -5,19 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Badge Printing Decision Guide</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Add jsPDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- Custom CSS File Link -->
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <!-- Unified Header -->
     <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
@@ -40,7 +37,6 @@
                         class="ml-3 text-sm font-semibold text-slate-400 border-l pl-3 border-slate-300 hidden sm:block">Badge
                         Guide</span>
                 </div>
-                <!-- NEW: Result Page Button -->
                 <a href="results.html"
                     class="text-sm font-medium text-sky-600 hover:text-sky-800 transition-colors flex items-center gap-1">
                     View Results
@@ -53,12 +49,10 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div id="app" class="w-full max-w-2xl mx-auto flex-grow flex flex-col justify-center p-4">
 
         <div class="bg-white rounded-2xl shadow-xl p-6 md:p-10 transition-all duration-500">
 
-            <!-- Progress Bar and Header -->
             <div id="header" class="mb-8">
                 <div class="flex justify-between items-center mb-2">
                     <h2 class="text-sm font-semibold text-sky-600">Decision Progress</h2>
@@ -70,14 +64,10 @@
                 </div>
             </div>
 
-            <!-- Main content area for steps -->
             <div id="step-container" class="min-h-[300px]">
-                <!-- Step content will be injected here by JavaScript -->
             </div>
-            <!-- Hidden textarea for copy to clipboard -->
             <textarea id="copy-helper" class="absolute -left-full"></textarea>
 
-            <!-- Navigation Buttons -->
             <div id="navigation" class="mt-8 flex items-center justify-between">
                 <button id="prev-btn"
                     class="text-slate-600 font-semibold py-2 px-4 rounded-lg hover:bg-slate-100 transition-colors">Back</button>
@@ -94,7 +84,6 @@
         <p>Your streamlined solution for event badging, powered by vFairs.</p>
     </footer>
 
-    <!-- Custom JavaScript File Link -->
     <script type="module" src="js/app.js"></script>
 </body>
 

@@ -3,9 +3,6 @@
 import { state, elements } from './state.js';
 import { decisionTree, summaryLabels, checklistsData } from './data.js';
 
-// ... (renderInputStep, renderDateStep, renderOptionsStep, renderResultCard functions remain unchanged) ...
-// (I will include the full file content for completeness, but the main change is in saveSessionData)
-
 function renderInputStep(stepInfo) {
     const previousValue = state.answers[state.step] || '';
 
@@ -67,7 +64,7 @@ function renderOptionsStep(stepInfo) {
 
 function renderResultCard() {
     const stepInfo = decisionTree[state.step];
-    const { title, subtitle, mainPoint, isUrgent = false, imageUrl } = stepInfo;
+    const { title, subtitle, mainPoint, isUrgent = false } = stepInfo;
 
     const labels = summaryLabels;
 
@@ -87,7 +84,6 @@ function renderResultCard() {
     return `
         <div class="step-content result-card max-w-lg mx-auto">
             
-            <!-- Hero Result Section -->
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-full ${bgBadge} mb-4">
                     ${isUrgent
@@ -104,7 +100,6 @@ function renderResultCard() {
                 </div>
             </div>
 
-            <!-- Summary Details -->
             <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 mb-8">
                 <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Configuration Summary</h3>
                 <div class="space-y-1">
@@ -112,11 +107,17 @@ function renderResultCard() {
                 </div>
             </div>
             
-            <!-- Primary Action -->
             <div class="flex flex-col gap-3">
                 <button id="download-pdf-btn" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     <span class="text-lg">Save & Download Results</span>
+                </button>
+
+                <button id="download-excel-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span class="text-lg">Download Checklist (Excel)</span>
                 </button>
                 
                 <button id="copy-summary-btn" class="w-full bg-white border-2 border-slate-200 text-slate-600 font-semibold py-3 px-6 rounded-xl hover:border-slate-300 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
@@ -244,6 +245,8 @@ export function handleStepContainerClick(e) {
         copySummary(targetButton);
     } else if (targetButton.id === 'download-pdf-btn') {
         downloadPdf();
+    } else if (targetButton.id === 'download-excel-btn') { // New Handler
+        downloadExcel();
     }
 }
 
@@ -648,4 +651,95 @@ function saveSessionData() {
                 btn.innerHTML = originalText;
             }, 3000);
         });
+}
+
+function downloadExcel() {
+    if (!window.XLSX) {
+        alert('Excel library not loaded. Please refresh the page.');
+        return;
+    }
+
+    const wb = window.XLSX.utils.book_new();
+
+    // --- Sheet 1: Summary ---
+    const summaryRows = [
+        ["Badge Decision Guide Summary"],
+        ["Generated on", new Date().toLocaleString()],
+        [],
+        ["Field", "Value"]
+    ];
+
+    // Add Answers
+    const labels = summaryLabels;
+    Object.entries(state.answers).forEach(([key, value]) => {
+        if (labels[key] && value) {
+            summaryRows.push([labels[key], value.trim()]);
+        }
+    });
+
+    summaryRows.push([]);
+    summaryRows.push(["RECOMMENDATION"]);
+    const stepInfo = decisionTree[state.step];
+    summaryRows.push(["Solution", stepInfo.title]);
+    summaryRows.push(["Details", stepInfo.mainPoint]);
+
+    const wsSummary = window.XLSX.utils.aoa_to_sheet(summaryRows);
+    window.XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+
+    // --- Sheet 2: Checklist ---
+    const checklistRows = [
+        ["Type", "Phase / Category", "Item", "Status", "Notes"]
+    ];
+
+    const processChecklist = (list, type) => {
+        list.forEach(phase => {
+            const phaseTitle = phase.title.replace(/<[^>]*>/g, '');
+
+            if (phase.items) {
+                phase.items.forEach(item => {
+                    checklistRows.push([
+                        type,
+                        phaseTitle,
+                        item.replace(/<[^>]*>/g, '').replace(/&quot;/g, '"'),
+                        "Pending",
+                        ""
+                    ]);
+                });
+            }
+
+            if (phase.sections) {
+                phase.sections.forEach(section => {
+                    const sectionTitle = section.title;
+                    section.items.forEach(item => {
+                        checklistRows.push([
+                            type,
+                            `${phaseTitle} - ${sectionTitle}`,
+                            item.replace(/<[^>]*>/g, '').replace(/&quot;/g, '"'),
+                            "Pending",
+                            ""
+                        ]);
+                    });
+                });
+            }
+        });
+    };
+
+    processChecklist(checklistsData.external, "External");
+    processChecklist(checklistsData.internal, "Internal");
+
+    const wsChecklist = window.XLSX.utils.aoa_to_sheet(checklistRows);
+
+    // Set column widths for readability
+    wsChecklist['!cols'] = [
+        { wch: 10 }, // Type
+        { wch: 30 }, // Phase
+        { wch: 80 }, // Item
+        { wch: 10 }, // Status
+        { wch: 30 }  // Notes
+    ];
+
+    window.XLSX.utils.book_append_sheet(wb, wsChecklist, "Checklist");
+
+    // Download
+    window.XLSX.writeFile(wb, `Badge_Checklist_${state.sessionId}.xlsx`);
 }
