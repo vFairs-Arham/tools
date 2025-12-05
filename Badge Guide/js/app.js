@@ -1,7 +1,7 @@
 // js/app.js
 
 import { elements, state } from './state.js';
-import { renderStep, handleStepContainerClick, handleNextClick, goBack, restart } from './handlers.js';
+import { renderStep, handleStepContainerClick, handleNextClick, goBack, restart, handleDateInput } from './handlers.js';
 
 // Replace with your DEPLOYED URL
 const API_URL = 'https://script.google.com/macros/s/AKfycbxyYFSvwG1meKDxhVSao8H-Shj7YFOW9XV_pqJxEOHqXiqFwmBNmP4aQw6arKJUX3fZqA/exec';
@@ -34,6 +34,7 @@ function init() {
     elements.nextBtn.addEventListener('click', handleNextClick);
     elements.prevBtn.addEventListener('click', goBack);
     elements.restartBtn.addEventListener('click', restart);
+    elements.stepContainer.addEventListener('input', handleDateInput);
 
     // 4. Render
     renderStep(state.step);

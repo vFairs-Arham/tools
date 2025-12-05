@@ -169,10 +169,10 @@ const coreFlow = {
         type: 'options',
         stepNumber: 3,
         options: [
-            { text: 'PVC (Plastic)', icon: '💳', next: 'pvcSleeve', imageUrl: 'https://placehold.co/150x90/0284C7/FFFFFF?text=PVC', tooltip: 'Durable, credit-card like material. Ideal for multi-day or professional events.' },
-            { text: 'ID Card', icon: '🆔', next: 'pvcBadgeDesign', imageUrl: 'https://placehold.co/150x90/0D9488/FFFFFF?text=ID+Card', tooltip: 'Standard ID card format, often used with photos.' },
-            { text: 'Tear Resistant', icon: '💪', next: 'tearResistantBadgeDesign', imageUrl: 'https://placehold.co/150x90/F59E0B/FFFFFF?text=Tear+Resistant', tooltip: 'Synthetic paper that resists tearing and water damage.' },
-            { text: 'Paper Badges', icon: '📄', next: 'paperBadgeDesign_longTimeframe', imageUrl: 'https://placehold.co/150x90/3B82F6/FFFFFF?text=Paper', tooltip: 'Cost-effective and ideal for single-day events.' }
+            { text: 'PVC (Plastic)', icon: '💳', next: 'pvcSleeve', imageUrl: 'assets/pvc_badge.png', tooltip: 'Durable, credit-card like material. Ideal for multi-day or professional events.' },
+            { text: 'ID Card', icon: '🆔', next: 'pvcBadgeDesign', imageUrl: 'assets/id_card.png', tooltip: 'Standard ID card format, often used with photos.' },
+            { text: 'Tear Resistant', icon: '💪', next: 'tearResistantBadgeDesign', imageUrl: 'assets/tear_resistant.png', tooltip: 'Synthetic paper that resists tearing and water damage.' },
+            { text: 'Paper Badges', icon: '📄', next: 'paperBadgeDesign_longTimeframe', imageUrl: 'assets/paper_badge.png', tooltip: 'Cost-effective and ideal for single-day events.' }
         ]
     },
     'badgeType_shortTimeframe': {
@@ -180,17 +180,17 @@ const coreFlow = {
         type: 'options',
         stepNumber: 3,
         options: [
-            { text: 'PVC (Plastic)', icon: '💳', next: 'pvcSleeve_shortTimeframe', imageUrl: 'https://placehold.co/150x90/0284C7/FFFFFF?text=PVC', tooltip: 'Durable, credit-card like material. Ideal for multi-day or professional events.' },
-            { text: 'ID Card', icon: '🆔', next: 'pvcOrIdBadgeDesign_shortTimeframe', imageUrl: 'https://placehold.co/150x90/0D9488/FFFFFF?text=ID+Card', tooltip: 'Standard ID card format, often used with photos.' },
-            { text: 'Tear Resistant', icon: '💪', next: 'tearResistantBadgeDesign_shortTimeframe', imageUrl: 'https://placehold.co/150x90/F59E0B/FFFFFF?text=Tear+Resistant', tooltip: 'Synthetic paper that resists tearing and water damage.' },
-            { text: 'Paper Badges', icon: '📄', next: 'paperBadgeDesign_longTimeframe', imageUrl: 'https://placehold.co/150x90/3B82F6/FFFFFF?text=Paper', tooltip: 'Cost-effective and ideal for single-day events.' }
+            { text: 'PVC (Plastic)', icon: '💳', next: 'pvcSleeve_shortTimeframe', imageUrl: 'assets/pvc_badge.png', tooltip: 'Durable, credit-card like material. Ideal for multi-day or professional events.' },
+            { text: 'ID Card', icon: '🆔', next: 'pvcOrIdBadgeDesign_shortTimeframe', imageUrl: 'assets/id_card.png', tooltip: 'Standard ID card format, often used with photos.' },
+            { text: 'Tear Resistant', icon: '💪', next: 'tearResistantBadgeDesign_shortTimeframe', imageUrl: 'assets/tear_resistant.png', tooltip: 'Synthetic paper that resists tearing and water damage.' },
+            { text: 'Paper Badges', icon: '📄', next: 'paperBadgeDesign_longTimeframe', imageUrl: 'assets/paper_badge.png', tooltip: 'Cost-effective and ideal for single-day events.' }
         ]
     },
 };
 
 const pvcFlow = {
     // 4+ week flow
-    'pvcSleeve': { question: "Will the PVC badges require a sleeve?", imageUrl: 'https://placehold.co/400x250/E0F2FE/0284C7?text=Badge+with+Sleeve', type: 'options', stepNumber: 4, options: [{ text: 'Yes, with a sleeve', icon: '✅', next: 'sleevePreprintResult' }, { text: 'No, just the card', icon: '❌', next: 'pvcBadgeDesign' }] },
+    'pvcSleeve': { question: "Will the PVC badges require a sleeve?", imageUrl: 'assets/sleeve_example.png', type: 'options', stepNumber: 4, options: [{ text: 'Yes, with a sleeve', icon: '✅', next: 'sleevePreprintResult' }, { text: 'No, just the card', icon: '❌', next: 'pvcBadgeDesign' }] },
     'pvcBadgeDesign': { question: "Do you have a badge design?", type: 'options', stepNumber: 5, options: [{ text: 'Yes', icon: '🎨', next: 'noSleeveColorBw' }, { text: 'No', icon: '❓', next: 'pvcNoDesignPreprintFields' }] },
     'noSleeveColorBw': { question: "Will the badge design be printed in Color or B/W?", type: 'options', stepNumber: 6, options: [{ text: 'Color', icon: '🎨', next: 'onsiteOrPreprint' }, { text: 'Black & White', icon: '⚫', next: 'onsiteOrPreprint' }] },
     'onsiteOrPreprint': { question: "Will the printing be done Onsite or Preprint?", tooltip: "Onsite offers flexibility for last-minute changes. Preprint is often more cost-effective for large, fixed attendee lists.", type: 'options', stepNumber: 7, options: [{ text: 'Onsite', icon: '🏢', next: 'onsiteRouter' }, { text: 'Preprint', icon: '🏭', next: 'noSleevePreprintColorBw' }] },
@@ -198,7 +198,7 @@ const pvcFlow = {
     'pvcNoDesignPreprintFields': { question: "For preprint, will the fields be in Color or B/W?", type: 'options', stepNumber: 6, options: [{ text: 'Color', icon: '🎨', next: 'preprintRouter' }, { text: 'Black & White', icon: '⚫', next: 'bwZebraStickerResult' }] },
 
     // 2-3 Week PVC Flow (and ID Card shared flow)
-    'pvcSleeve_shortTimeframe': { question: "Will the PVC badges require a sleeve?", imageUrl: 'https://placehold.co/400x250/E0F2FE/0284C7?text=Badge+with+Sleeve', type: 'options', stepNumber: 4, options: [{ text: 'Yes, with a sleeve', icon: '✅', next: 'notPossibleSleeveResult' }, { text: 'No, just the card', icon: '❌', next: 'pvcOrIdBadgeDesign_shortTimeframe' }] },
+    'pvcSleeve_shortTimeframe': { question: "Will the PVC badges require a sleeve?", imageUrl: 'assets/sleeve_example.png', type: 'options', stepNumber: 4, options: [{ text: 'Yes, with a sleeve', icon: '✅', next: 'notPossibleSleeveResult' }, { text: 'No, just the card', icon: '❌', next: 'pvcOrIdBadgeDesign_shortTimeframe' }] },
     'pvcOrIdBadgeDesign_shortTimeframe': { question: "Do you have a badge design?", type: 'options', stepNumber: 5, options: [{ text: 'Yes', icon: '🎨', next: 'pvcOrIdColorBw_shortTimeframe' }, { text: 'No', icon: '❓', next: 'fieldsColorRouter_shortTimeframe' }] },
     'pvcOrIdColorBw_shortTimeframe': { question: "Will the badge design be printed in Color or B/W?", type: 'options', stepNumber: 6, options: [{ text: 'Color', icon: '🎨', next: 'pvcOrIdOnsitePreprint_shortTimeframe' }, { text: 'Black & White', icon: '⚫', next: 'pvcOrIdOnsitePreprint_shortTimeframe' }] },
     'pvcOrIdOnsitePreprint_shortTimeframe': { question: "Will printing be Onsite or Preprint?", type: 'options', stepNumber: 7, options: [{ text: 'Onsite', icon: '🏢', next: 'fieldsColorRouter_shortTimeframe' }, { text: 'Preprint', icon: '🏭', next: 'notPossibleTearResistantPreprintColorResult' }] },
@@ -233,7 +233,7 @@ const paperFlow = {
         stepNumber: 4,
     },
     'paperBadgeDesign_longTimeframe': { question: "Do you have a design for the paper badges?", type: 'options', stepNumber: 4, options: [{ text: 'Yes', icon: '🎨', next: 'paperColorBw_longTimeframe' }, { text: 'No', icon: '❓', next: 'paperResultZebraHolder' }] },
-    'paperColorBw_longTimeframe': { question: "Will the design be Color or B/W?", type: 'options', stepNumber: 5, options: [{ text: 'Color', icon: '🎨', next: 'paperColorOnsitePreprint_longTimeframe' }, { text: 'Black & White', icon: '⚫', next: 'paperBwOnsitePreprint_longTimeframe' }] },
+    'paperColorBw_longTimeframe': { question: "Will the design be Color or B/W?", type: 'options', stepNumber: 5, options: [{ text: 'Color', icon: '🎨', next: 'paperColorOnsitePreprint_longTimeframe', imageUrl: 'assets/paper_badge-color.png' }, { text: 'Black & White', icon: '⚫', next: 'paperBwOnsitePreprint_longTimeframe', imageUrl: 'assets/paper_badge -black.png' }] },
     'paperColorOnsitePreprint_longTimeframe': { question: "Will printing be Onsite or Preprint?", type: 'options', stepNumber: 6, options: [{ text: 'Onsite', icon: '🏢', next: 'notPossiblePaperColorResult' }, { text: 'Preprint', icon: '🏭', next: 'paperBwFieldsColor_longTimeframe' }] },
     'paperBwOnsitePreprint_longTimeframe': { question: "Will printing be Onsite or Preprint?", type: 'options', stepNumber: 6, options: [{ text: 'Onsite', icon: '🏢', next: 'paperBwFieldsColor_longTimeframe' }, { text: 'Preprint', icon: '🏭', next: 'paperBwFieldsColor_longTimeframe' }] },
     'paperBwFieldsColor_longTimeframe': { question: "For the variable fields, will they be printed in Color or B/W?", type: 'options', stepNumber: 7, options: [{ text: 'Color', icon: '🎨', next: 'notPossiblePaperColorResult' }, { text: 'Black & White', icon: '⚫', next: 'paperResultZebra' }] },
@@ -254,7 +254,7 @@ export const decisionTree = {
     },
     'idCardResult': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Evolis',
+        imageUrl: 'assets/id_card_print_setup.png',
         title: 'ID Card Solution',
         subtitle: 'For ID Cards, we recommend:',
         mainPoint: 'Evolis + ID Cards + Laptop',
@@ -282,70 +282,70 @@ export const decisionTree = {
     },
     'sleevePreprintResult': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Zebra+ZD621',
+        imageUrl: 'assets/printer_zebra.png',
         title: 'Sleeved Badge Solution',
         subtitle: 'The recommended setup is:',
         mainPoint: 'Preprint Only with ZD620/21',
     },
     'bwZebraStickerResult': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Zebra+ZD621',
+        imageUrl: 'assets/printer_zebra.png',
         title: 'B/W Printing Solution',
         subtitle: 'The recommended hardware is:',
         mainPoint: 'Zebra ZD620/21 + Sticker Paper + PVC Cards',
     },
     'pvcColorOnsiteResult': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Zebra+ZC10L',
+        imageUrl: 'assets/printer_zc10l.png',
         title: 'Color PVC Solution',
         subtitle: 'For this requirement, we recommend:',
         mainPoint: 'ZC10L Printer + PVC Cards + Laptop',
     },
     'speedPrinterResult': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Epson',
+        imageUrl: 'assets/printer_epson.png',
         title: 'No-Design PVC Solution',
         subtitle: 'For PVC without a design, the solution is:',
         mainPoint: 'Epson Printer + Tear Resistant (Epson Compatible) Badges + Laptop',
     },
     'tearResistantResultZebra': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Zebra+ZD621',
+        imageUrl: 'assets/printer_zebra.png',
         title: 'Tear Resistant Solution',
         subtitle: 'The recommended hardware is:',
         mainPoint: 'Zebra ZD620/21 + Tear Resistant Badges',
     },
     'epsonTearResistantResult': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Epson',
+        imageUrl: 'assets/printer_epson.png',
         title: 'Tear Resistant Color Solution',
         subtitle: 'The recommended hardware is:',
         mainPoint: 'Epson Printer + Tear Resistant (Epson Compatible) Badges + Laptop',
     },
     'tearResistantZebraOrStickerResult': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Zebra+ZD621',
+        imageUrl: 'assets/printer_zebra.png',
         title: 'Tear Resistant B/W Solution',
         subtitle: 'The recommended hardware is:',
         mainPoint: 'Zebra ZD620/21 + Tear Resistant Badges OR Zebra ZD620/21 + Tear Resistant Badges + Sticker',
     },
     'educateClientResult': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/D1D5DB/374151?text=Consult+Team',
+        imageUrl: 'assets/reception_team.png',
         title: 'Action Required',
         subtitle: 'For tear-resistant badges without a design:',
         mainPoint: 'Educate the client on design options and requirements.',
     },
     'paperResultZebra': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Zebra+ZD621',
+        imageUrl: 'assets/printer_zebra.png',
         title: 'Paper Badge Solution',
         subtitle: 'The recommended hardware is:',
         mainPoint: 'Zebra ZD620/21 + Paper Badges',
     },
     'paperResultZebraHolder': {
         isResult: true,
-        imageUrl: 'https://placehold.co/200x150/374151/FFFFFF?text=Zebra+ZD621',
+        imageUrl: 'assets/printer_zebra.png',
         title: 'Paper Badge Solution (No Design)',
         subtitle: 'The recommended hardware is:',
         mainPoint: 'Zebra ZD620/21 + Paper Badge + Holder',

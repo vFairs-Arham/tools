@@ -25,11 +25,26 @@ function renderDateStep(stepInfo) {
 
     return `
         <div class="step-content">
-            <h2 class="text-2xl font-bold mb-6">${stepInfo.question}</h2>
-            <div class="flex flex-col gap-4">
-                <label class="text-sm text-slate-600 font-semibold">Select Date</label>
-                <input type="date" id="event-date-input" min="${today}" value="${previousDate}" class="w-full p-4 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition text-lg">
-                <p class="error-message text-red-500 text-sm mt-2 h-5"></p>
+            <h2 class="text-2xl font-bold mb-6 text-center">${stepInfo.question}</h2>
+            
+            <div class="max-w-md mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div class="flex flex-col gap-4">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-widest">Select Event Start Date</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400 group-hover:text-sky-500 transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <input type="date" id="event-date-input" min="${today}" value="${previousDate}" class="pl-10 w-full p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all text-lg font-medium text-slate-700 bg-slate-50 hover:bg-white cursor-pointer">
+                    </div>
+                </div>
+
+                <div id="date-feedback" class="mt-0 overflow-hidden transition-all duration-500 max-h-0 opacity-0">
+                    <!-- Dynamic Content -->
+                </div>
+
+                <p class="error-message text-red-500 text-sm mt-3 h-5 text-center font-medium"></p>
             </div>
         </div>
     `;
@@ -43,11 +58,17 @@ function renderOptionsStep(stepInfo) {
     return `
         <div class="step-content">
             <h2 class="text-2xl font-bold mb-6 ${questionAlignment}">${stepInfo.question}</h2>
-            ${stepInfo.imageUrl && !hasOptionImages ? `<img src="${stepInfo.imageUrl}" alt="${stepInfo.question}" class="mb-6 rounded-lg mx-auto shadow-md">` : ''}
+            ${stepInfo.imageUrl && !hasOptionImages ? `
+            <div class="mb-6 rounded-lg mx-auto shadow-md bg-slate-100 p-4 max-h-64 flex justify-center items-center relative z-10 w-fit zoom-wrapper">
+                <img src="${stepInfo.imageUrl}" alt="${stepInfo.question}" class="max-h-56 object-contain zoom-image">
+            </div>` : ''}
             <div class="grid ${gridClass} gap-4">
                 ${stepInfo.options.map(opt => `
                     <button data-action="navigate" data-next="${opt.next}" data-value="${opt.text}" class="option-card text-left p-4 border-2 border-slate-200 rounded-lg hover:border-sky-500 hover:bg-sky-50 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 flex flex-col items-center text-center">
-                        ${opt.imageUrl ? `<img src="${opt.imageUrl}" alt="${opt.text}" class="mb-3 rounded-md h-24 w-full object-cover">` : ''}
+                        ${opt.imageUrl ? `
+                        <div class="mb-3 rounded-md h-24 w-full bg-slate-100 p-2 relative z-10 zoom-wrapper">
+                            <img src="${opt.imageUrl}" alt="${opt.text}" class="w-full h-full object-contain zoom-image">
+                        </div>` : ''}
                         <div class="flex items-center justify-center w-full ${opt.imageUrl ? 'mt-2' : ''}">
                             <span class="text-2xl mr-3">${opt.icon}</span>
                             <div class="tooltip">
@@ -742,4 +763,72 @@ function downloadExcel() {
 
     // Download
     window.XLSX.writeFile(wb, `Badge_Checklist_${state.sessionId}.xlsx`);
+}
+
+export function handleDateInput(e) {
+    if (e.target.id !== 'event-date-input') return;
+
+    const input = e.target;
+    const dateVal = input.value;
+    const feedbackEl = document.getElementById('date-feedback');
+
+    if (!dateVal) {
+        feedbackEl.style.maxHeight = '0';
+        feedbackEl.style.opacity = '0';
+        return;
+    }
+
+    const selectedDate = new Date(dateVal);
+    const now = new Date();
+    selectedDate.setHours(0, 0, 0, 0);
+    now.setHours(0, 0, 0, 0);
+
+    // Simple validation visual
+    if (selectedDate < now) {
+        input.classList.add('border-red-400', 'bg-red-50');
+        input.classList.remove('border-slate-200', 'bg-slate-50');
+        feedbackEl.innerHTML = `<div class="p-4 bg-red-50 text-red-600 rounded-xl text-center font-semibold border border-red-100">Date must be in the future</div>`;
+    } else {
+        input.classList.remove('border-red-400', 'bg-red-50');
+        input.classList.add('border-sky-500', 'bg-sky-50');
+
+        const diffTime = Math.abs(selectedDate - now);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffWeeks = (diffDays / 7).toFixed(1);
+
+        let badgeClass = '';
+        let badgeText = '';
+        let description = '';
+
+        if (diffDays / 7 >= 4) {
+            badgeClass = 'bg-green-100 text-green-700 border-green-200';
+            badgeText = 'Standard Timeline';
+            description = 'Plenty of time for any badge type, including custom PVC.';
+        } else if (diffDays / 7 >= 3) {
+            badgeClass = 'bg-blue-100 text-blue-700 border-blue-200';
+            badgeText = 'Standard Timeline';
+            description = 'Good for most badge types.';
+        } else if (diffDays / 7 >= 2) {
+            badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+            badgeText = 'Tight Timeline';
+            description = 'Limited options (No custom PVC).';
+        } else {
+            badgeClass = 'bg-red-100 text-red-700 border-red-200';
+            badgeText = 'Urgent';
+            description = 'Consultation required immediately.';
+        }
+
+        feedbackEl.innerHTML = `
+            <div class="mt-4 p-4 rounded-xl border ${badgeClass} animate-fade-in">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-bold text-lg">${diffDays} Days / ${diffWeeks} Weeks</span>
+                    <span class="px-3 py-1 rounded-full bg-white bg-opacity-50 text-xs font-bold uppercase tracking-wider shadow-sm">${badgeText}</span>
+                </div>
+                <p class="text-sm opacity-90 font-medium">${description}</p>
+            </div>
+        `;
+    }
+
+    feedbackEl.style.maxHeight = '200px';
+    feedbackEl.style.opacity = '1';
 }
