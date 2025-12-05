@@ -157,7 +157,7 @@ const coreFlow = {
         placeholder: "Select or type name...",
         next: 'timeframe',
         stepNumber: 1,
-        // Datalist is now dynamic, removed hardcoded array
+
     },
     'timeframe': {
         question: "When is your event going live?",
@@ -249,7 +249,7 @@ export const decisionTree = {
         isResult: true,
         title: 'Action Required',
         subtitle: 'For tight deadlines:',
-        mainPoint: 'Consult with Usama and Hamza over blank.',
+        mainPoint: 'Consult with your team lead over tight deadlines.',
         isUrgent: true,
     },
     'idCardResult': {
