@@ -29,11 +29,9 @@
 
     // Create and inject the feedback UI
     function createFeedbackUI() {
-        // Create CSS link
-        const cssLink = document.createElement('link');
-        cssLink.rel = 'stylesheet';
-        cssLink.href = '../shared/feedback.css';
-        document.head.appendChild(cssLink);
+        // Note: CSS should be included in HTML head
+        // <link rel="stylesheet" href="../shared/feedback.css"> (for subdirectory tools)
+        // <link rel="stylesheet" href="shared/feedback.css"> (for root-level pages)
 
         // Create FAB button
         const fab = document.createElement('button');
