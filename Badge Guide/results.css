@@ -64,3 +64,57 @@ body {
 #admin-table-body tr:hover {
     background-color: #f8fafc;
 }
+
+/* Admin Tab Styles */
+.admin-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    background: none;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.admin-tab:hover {
+    color: #0284c7;
+    background: #f8fafc;
+}
+
+.admin-tab-active {
+    color: #0284c7;
+    border-bottom-color: #0284c7;
+}
+
+#feedback-table-body tr:hover {
+    background-color: #f8fafc;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.new {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.reviewed {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-badge.resolved {
+    background: #d1fae5;
+    color: #065f46;
+}

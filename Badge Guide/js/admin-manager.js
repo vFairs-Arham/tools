@@ -28,6 +28,7 @@ export function initAdminManager(apiUrl) {
             if (json.status === 'success') {
                 modal.classList.add('hidden');
                 switchToAdminView(json.data);
+                setupAdminTabs(apiUrl, code); // Initialize tabs
             } else {
                 alert('Invalid Code');
             }
@@ -133,4 +134,93 @@ function handleSort(key) {
     });
 
     renderTable(sorted);
+}
+
+// Tab Switching Logic
+let feedbackData = [];
+let currentAdminCode = '';
+
+export function setupAdminTabs(apiUrl, adminCode) {
+    currentAdminCode = adminCode;
+    const tabSessions = document.getElementById('tab-sessions');
+    const tabFeedback = document.getElementById('tab-feedback');
+    const sessionsTable = document.getElementById('sessions-table');
+    const feedbackTable = document.getElementById('feedback-table');
+
+    tabSessions.addEventListener('click', () => {
+        tabSessions.classList.add('admin-tab-active');
+        tabFeedback.classList.remove('admin-tab-active');
+        sessionsTable.classList.remove('hidden');
+        feedbackTable.classList.add('hidden');
+    });
+
+    tabFeedback.addEventListener('click', async () => {
+        tabFeedback.classList.add('admin-tab-active');
+        tabSessions.classList.remove('admin-tab-active');
+        feedbackTable.classList.remove('hidden');
+        sessionsTable.classList.add('hidden');
+
+        // Load feedback data
+        if (feedbackData.length === 0) {
+            await loadFeedbackData(apiUrl);
+        }
+    });
+}
+
+async function loadFeedbackData(apiUrl) {
+    try {
+        const response = await fetch(`${apiUrl}?action=getFeedback&code=${encodeURIComponent(currentAdminCode)}`);
+        const json = await response.json();
+
+        if (json.status === 'success') {
+            feedbackData = json.data;
+            renderFeedbackTable(feedbackData);
+        } else {
+            alert('Failed to load feedback data');
+        }
+    } catch (error) {
+        console.error('Error loading feedback:', error);
+        alert('Error loading feedback data');
+    }
+}
+
+function renderFeedbackTable(data) {
+    const tbody = document.getElementById('feedback-table-body');
+    const emptyState = document.getElementById('feedback-empty-state');
+
+    tbody.innerHTML = '';
+
+    if (data.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+    }
+    emptyState.classList.add('hidden');
+
+    tbody.innerHTML = data.map(row => {
+        const categoryIcons = {
+            bug: '🐛',
+            feature: '✨',
+            improvement: '🚀',
+            other: '💬'
+        };
+
+        return `
+        <tr class="border-b border-slate-100">
+            <td class="px-6 py-4 font-medium text-slate-900">${new Date(row.timestamp).toLocaleDateString()}</td>
+            <td class="px-6 py-4">${row.toolName}</td>
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-1">
+                    <span>${categoryIcons[row.category] || '💬'}</span>
+                    <span class="text-xs">${row.category}</span>
+                </div>
+            </td>
+            <td class="px-6 py-4 max-w-xs truncate" title="${row.feedback}">${row.feedback}</td>
+            <td class="px-6 py-4">${row.userName}</td>
+            <td class="px-6 py-4"><span class="status-badge ${row.status.toLowerCase()}">${row.status}</span></td>
+            <td class="px-6 py-4 text-right">
+                <a href="${row.pageUrl}" target="_blank" class="text-xs text-blue-500 hover:underline">View Page</a>
+            </td>
+        </tr>
+    `;
+    }).join('');
 }
