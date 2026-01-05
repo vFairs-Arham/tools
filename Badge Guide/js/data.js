@@ -98,6 +98,7 @@ export const checklistsData = {
 
 export const summaryLabels = {
     pmName: 'Project Manager',
+    eventName: 'Event Name',
     eventDate: 'Event Date',
     timeframe: 'Calculated Lead Time',
     badgeType_longTimeframe: 'Badge Type',
@@ -149,20 +150,26 @@ const coreFlow = {
             </div>
         `,
         isStart: true,
-        totalSteps: 8,
+        totalSteps: 9,
     },
     'pmName': {
         question: "Let's start with your Project Manager's Name.",
         type: 'text',
         placeholder: "Select or type name...",
-        next: 'timeframe',
+        next: 'eventName',
         stepNumber: 1,
-
+    },
+    'eventName': {
+        question: "What's the name of your event?",
+        type: 'text',
+        placeholder: "Enter event name...",
+        next: 'timeframe',
+        stepNumber: 2,
     },
     'timeframe': {
         question: "When is your event going live?",
         type: 'date',
-        stepNumber: 2,
+        stepNumber: 3,
     },
     'badgeType_longTimeframe': {
         question: "What type of badge are you looking for?",

@@ -134,11 +134,11 @@ function renderResultCard() {
                     <span class="text-lg">Save & Download Results</span>
                 </button>
 
-                <button id="download-excel-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
+                <button id="copy-checklist-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span class="text-lg">Download Checklist (Excel)</span>
+                    <span class="text-lg">Copy Checklist (Google Sheets)</span>
                 </button>
                 
                 <button id="copy-summary-btn" class="w-full bg-white border-2 border-slate-200 text-slate-600 font-semibold py-3 px-6 rounded-xl hover:border-slate-300 hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
@@ -266,8 +266,8 @@ export function handleStepContainerClick(e) {
         copySummary(targetButton);
     } else if (targetButton.id === 'download-pdf-btn') {
         downloadPdf();
-    } else if (targetButton.id === 'download-excel-btn') { // New Handler
-        downloadExcel();
+    } else if (targetButton.id === 'copy-checklist-btn') {
+        copyChecklist();
     }
 }
 
@@ -674,95 +674,85 @@ function saveSessionData() {
         });
 }
 
-function downloadExcel() {
-    if (!window.XLSX) {
-        alert('Excel library not loaded. Please refresh the page.');
-        return;
-    }
+function copyChecklist() {
+    const btn = document.getElementById('copy-checklist-btn');
+    if (!btn) return;
 
-    const wb = window.XLSX.utils.book_new();
-
-    // --- Sheet 1: Summary ---
-    const summaryRows = [
-        ["Badge Decision Guide Summary"],
-        ["Generated on", new Date().toLocaleString()],
-        [],
-        ["Field", "Value"]
-    ];
-
-    // Add Answers
-    const labels = summaryLabels;
-    Object.entries(state.answers).forEach(([key, value]) => {
-        if (labels[key] && value) {
-            summaryRows.push([labels[key], value.trim()]);
-        }
-    });
-
-    summaryRows.push([]);
-    summaryRows.push(["RECOMMENDATION"]);
+    const pmName = state.answers.pmName || 'Unknown PM';
+    const eventName = state.answers.eventName || 'Unnamed Event';
     const stepInfo = decisionTree[state.step];
-    summaryRows.push(["Solution", stepInfo.title]);
-    summaryRows.push(["Details", stepInfo.mainPoint]);
 
-    const wsSummary = window.XLSX.utils.aoa_to_sheet(summaryRows);
-    window.XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-lg">Creating Copy...</span>`;
+    btn.disabled = true;
 
-    // --- Sheet 2: Checklist ---
-    const checklistRows = [
-        ["Type", "Phase / Category", "Item", "Status", "Notes"]
-    ];
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyYFSvwG1meKDxhVSao8H-Shj7YFOW9XV_pqJxEOHqXiqFwmBNmP4aQw6arKJUX3fZqA/exec';
 
-    const processChecklist = (list, type) => {
-        list.forEach(phase => {
-            const phaseTitle = phase.title.replace(/<[^>]*>/g, '');
-
-            if (phase.items) {
-                phase.items.forEach(item => {
-                    checklistRows.push([
-                        type,
-                        phaseTitle,
-                        item.replace(/<[^>]*>/g, '').replace(/&quot;/g, '"'),
-                        "Pending",
-                        ""
-                    ]);
-                });
-            }
-
-            if (phase.sections) {
-                phase.sections.forEach(section => {
-                    const sectionTitle = section.title;
-                    section.items.forEach(item => {
-                        checklistRows.push([
-                            type,
-                            `${phaseTitle} - ${sectionTitle}`,
-                            item.replace(/<[^>]*>/g, '').replace(/&quot;/g, '"'),
-                            "Pending",
-                            ""
-                        ]);
-                    });
-                });
-            }
-        });
+    const payload = {
+        action: 'makeCopy',
+        sessionId: state.sessionId,
+        pmName: pmName,
+        eventName: eventName,
+        timestamp: new Date().toISOString(),
+        answers: state.answers,
+        result: {
+            title: stepInfo.title,
+            subtitle: stepInfo.subtitle,
+            mainPoint: stepInfo.mainPoint,
+            isUrgent: stepInfo.isUrgent
+        }
     };
 
-    processChecklist(checklistsData.external, "External");
-    processChecklist(checklistsData.internal, "Internal");
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== 'success') {
+                throw new Error(data.message || 'Failed to create copy');
+            }
 
-    const wsChecklist = window.XLSX.utils.aoa_to_sheet(checklistRows);
+            // Success! Show the link to the copied sheet
+            btn.innerHTML = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-lg">Copy Created!</span>`;
 
-    // Set column widths for readability
-    wsChecklist['!cols'] = [
-        { wch: 10 }, // Type
-        { wch: 30 }, // Phase
-        { wch: 80 }, // Item
-        { wch: 10 }, // Status
-        { wch: 30 }  // Notes
-    ];
+            const resultContainer = document.querySelector('.result-card');
+            if (resultContainer && !document.getElementById('checklist-link-container')) {
+                const linkDiv = document.createElement('div');
+                linkDiv.id = 'checklist-link-container';
+                linkDiv.className = 'mt-6 p-6 bg-green-50 border border-green-200 rounded-xl shadow-sm';
+                linkDiv.innerHTML = `
+                <div class="flex items-center justify-center mb-3">
+                    <svg class="w-8 h-8 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <h3 class="text-lg font-bold text-green-800">Checklist Created!</h3>
+                </div>
+                <p class="text-slate-600 mb-4 text-center">Your personalized checklist has been created:</p>
+                <div class="bg-white p-3 border border-slate-300 rounded-lg mb-4 text-center">
+                    <p class="font-semibold text-slate-800">${eventName} - ${pmName}</p>
+                </div>
+                <a href="${data.sheetUrl}" target="_blank" class="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-center transition-colors">
+                    Open Checklist in Google Sheets
+                    <svg class="inline-block w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                </a>
+            `;
+                resultContainer.appendChild(linkDiv);
+            }
 
-    window.XLSX.utils.book_append_sheet(wb, wsChecklist, "Checklist");
-
-    // Download
-    window.XLSX.writeFile(wb, `Badge_Checklist_${state.sessionId}.xlsx`);
+            // Open the sheet in a new tab
+            window.open(data.sheetUrl, '_blank');
+        })
+        .catch(error => {
+            console.error('Error creating sheet copy:', error);
+            btn.innerHTML = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg><span class="text-lg">Error</span>`;
+            alert('Failed to create checklist copy. Please try again.');
+        })
+        .finally(() => {
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }, 3000);
+        });
 }
 
 export function handleDateInput(e) {
