@@ -4,7 +4,12 @@ export const state = {
     step: 'start',
     answers: {},
     history: [],
-    sessionId: `session_${Math.random().toString(36).substring(2, 15)}_${Date.now()}`,
+    // New Format: BG-YYYYMMDD-XXXX (e.g., BG-20240427-A1B2)
+    sessionId: (() => {
+        const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+        return `BG-${date}-${random}`;
+    })(),
     pmList: [], // Store fetched PMs here
     hasSavedData: false // Flag for UI
 };

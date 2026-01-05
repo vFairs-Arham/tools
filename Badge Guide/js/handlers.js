@@ -675,85 +675,120 @@ function saveSessionData() {
 }
 
 function copyChecklist() {
-    const btn = document.getElementById('copy-checklist-btn');
-    if (!btn) return;
-
+    const TEMPLATE_ID = '1HCo7C_Vd2W3iWC4iyyGPtWwS4rohkMzh8ht564VY7CY';
     const pmName = state.answers.pmName || 'Unknown PM';
     const eventName = state.answers.eventName || 'Unnamed Event';
-    const stepInfo = decisionTree[state.step];
+    const sessionId = state.sessionId;
 
-    const originalText = btn.innerHTML;
-    btn.innerHTML = `<svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="text-lg">Creating Copy...</span>`;
-    btn.disabled = true;
+    // Updated Naming Convention
+    const SHEET_NAME_FORMAT = `${eventName} - ${pmName} - Badge Checklist`;
 
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyYFSvwG1meKDxhVSao8H-Shj7YFOW9XV_pqJxEOHqXiqFwmBNmP4aQw6arKJUX3fZqA/exec';
+    // 1. Copy the sheet name to clipboard automatically
+    navigator.clipboard.writeText(SHEET_NAME_FORMAT).then(() => {
+        // console.log('Copied to clipboard');
+    }).catch(err => {
+        console.error('Failed to copy', err);
+    });
 
-    const payload = {
-        action: 'makeCopy',
-        sessionId: state.sessionId,
-        pmName: pmName,
-        eventName: eventName,
-        timestamp: new Date().toISOString(),
-        answers: state.answers,
-        result: {
-            title: stepInfo.title,
-            subtitle: stepInfo.subtitle,
-            mainPoint: stepInfo.mainPoint,
-            isUrgent: stepInfo.isUrgent
+    // 2. Create and show the modal
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-slate-900 bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm fade-in';
+    modal.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 transform transition-all scale-100">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Ready to Copy!</h3>
+                <p class="text-slate-500">We've prepared your checklist template.</p>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6">
+                <div class="flex items-start gap-3 mb-3">
+                    <div class="mt-1 text-green-500">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-slate-700 text-sm">Name Copied to Clipboard!</p>
+                        <p class="text-xs text-slate-500">Just paste (Ctrl+V) when renaming your sheet.</p>
+                        <div class="mt-1 bg-white border border-slate-200 rounded px-2 py-1 text-xs font-mono text-slate-600">
+                            ${SHEET_NAME_FORMAT}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-start gap-3">
+                    <div class="mt-1 text-blue-500">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-slate-700 text-sm">Next Step</p>
+                        <p class="text-xs text-slate-500">Click "Make a copy" in the new tab to save it to your Drive.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button id="copy-proceed-btn" disabled class="w-full bg-slate-200 text-slate-400 font-bold py-4 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2">
+                <span id="copy-btn-text">Wait 3s...</span>
+                <svg class="w-5 h-5 hidden" id="copy-btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Timer Logic
+    let timeLeft = 3;
+    const btn = document.getElementById('copy-proceed-btn');
+    const btnText = document.getElementById('copy-btn-text');
+    const btnIcon = document.getElementById('copy-btn-icon');
+
+    const interval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+            btnText.textContent = `Wait ${timeLeft}s...`;
+        } else {
+            clearInterval(interval);
+            btn.disabled = false;
+            btn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+            btn.classList.add('bg-green-600', 'hover:bg-green-700', 'text-white', 'shadow-lg', 'transform', 'hover:-translate-y-0.5');
+            btnText.textContent = 'Open Google Sheets';
+            btnIcon.classList.remove('hidden');
         }
-    };
+    }, 1000);
 
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status !== 'success') {
-                throw new Error(data.message || 'Failed to create copy');
-            }
+    // Handle Click
+    btn.addEventListener('click', () => {
+        const copyUrl = `https://docs.google.com/spreadsheets/d/${TEMPLATE_ID}/copy`;
+        window.open(copyUrl, '_blank');
 
-            // Success! Show the link to the copied sheet
-            btn.innerHTML = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span class="text-lg">Copy Created!</span>`;
+        // Close modal after a short delay
+        setTimeout(() => {
+            modal.remove();
 
+            // Show simple success message in result card
             const resultContainer = document.querySelector('.result-card');
-            if (resultContainer && !document.getElementById('checklist-link-container')) {
-                const linkDiv = document.createElement('div');
-                linkDiv.id = 'checklist-link-container';
-                linkDiv.className = 'mt-6 p-6 bg-green-50 border border-green-200 rounded-xl shadow-sm';
-                linkDiv.innerHTML = `
-                <div class="flex items-center justify-center mb-3">
-                    <svg class="w-8 h-8 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    <h3 class="text-lg font-bold text-green-800">Checklist Created!</h3>
-                </div>
-                <p class="text-slate-600 mb-4 text-center">Your personalized checklist has been created:</p>
-                <div class="bg-white p-3 border border-slate-300 rounded-lg mb-4 text-center">
-                    <p class="font-semibold text-slate-800">${eventName} - ${pmName}</p>
-                </div>
-                <a href="${data.sheetUrl}" target="_blank" class="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-center transition-colors">
-                    Open Checklist in Google Sheets
-                    <svg class="inline-block w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                </a>
-            `;
-                resultContainer.appendChild(linkDiv);
+            if (resultContainer && !document.getElementById('checklist-success-msg')) {
+                const msg = document.createElement('div');
+                msg.id = 'checklist-success-msg';
+                msg.className = 'mt-4 text-center text-green-600 font-semibold text-sm animate-pulse';
+                msg.innerHTML = 'Template opened in new tab!';
+                resultContainer.appendChild(msg);
             }
+        }, 500);
+    });
 
-            // Open the sheet in a new tab
-            window.open(data.sheetUrl, '_blank');
-        })
-        .catch(error => {
-            console.error('Error creating sheet copy:', error);
-            btn.innerHTML = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg><span class="text-lg">Error</span>`;
-            alert('Failed to create checklist copy. Please try again.');
-        })
-        .finally(() => {
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }, 3000);
-        });
+    // Allow closing by clicking outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+            clearInterval(interval);
+        }
+    });
 }
+
 
 export function handleDateInput(e) {
     if (e.target.id !== 'event-date-input') return;
