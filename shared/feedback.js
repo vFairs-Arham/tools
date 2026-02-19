@@ -73,8 +73,8 @@
         modalElement = overlayElement.querySelector('.feedback-modal');
     }
 
-    function openModal() {
-        renderForm();
+    function openModal(category = null) {
+        renderForm(category);
         overlayElement.classList.add('show');
         document.body.style.overflow = 'hidden';
     }
@@ -85,9 +85,14 @@
         selectedCategory = null;
     }
 
-    function renderForm() {
+    function renderForm(preSelectedCategory = null) {
         const context = getToolContext();
         const container = document.getElementById('feedback-form-container');
+
+        // Set initial selection if provided
+        if (preSelectedCategory) {
+            selectedCategory = preSelectedCategory;
+        }
 
         container.innerHTML = `
             <form id="feedback-form">
@@ -95,7 +100,7 @@
                     <label class="feedback-form-label">Category <span class="required">*</span></label>
                     <div class="feedback-categories">
                         ${FEEDBACK_CATEGORIES.map(cat => `
-                            <div class="feedback-category" data-category="${cat.id}">
+                            <div class="feedback-category ${cat.id === selectedCategory ? 'selected' : ''}" data-category="${cat.id}">
                                 <div class="feedback-category-icon">${cat.icon}</div>
                                 <div>${cat.label.replace(/^[^\s]+\s/, '')}</div>
                             </div>

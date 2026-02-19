@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="tool-name" content="PNG Background Adder">
-    <title>PNG Background Adder — vFairs Tools</title>
+    <meta name="tool-name" content="Image Tools">
+    <title>Image Tools — vFairs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,26 +18,136 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* ── Drop Zone ── */
-        #drop-zone {
-            border: 2px dashed #cbd5e1;
-            transition: border-color 0.25s, background 0.25s;
+        /* Screens */
+        .screen {
+            display: none;
         }
 
-        #drop-zone.drag-over {
+        .screen.active {
+            display: flex;
+        }
+
+        /* Mode cards */
+        .mode-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 28px 24px;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.22s;
+            border-radius: 18px;
+        }
+
+        .mode-card:hover {
+            border-color: transparent;
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.10);
+        }
+
+        .mode-card:hover::before {
+            opacity: 1;
+        }
+
+        .mode-card.m-bg:hover {
+            border-color: #6366f1;
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
+        }
+
+        .mode-card.m-convert:hover {
             border-color: #0ea5e9;
+            box-shadow: 0 12px 32px rgba(14, 165, 233, 0.15);
+        }
+
+        .mode-card.m-resize:hover {
+            border-color: #10b981;
+            box-shadow: 0 12px 32px rgba(16, 185, 129, 0.15);
+        }
+
+        .mode-card.m-rotate:hover {
+            border-color: #f59e0b;
+            box-shadow: 0 12px 32px rgba(245, 158, 11, 0.15);
+        }
+
+        .mode-card.m-padding:hover {
+            border-color: #ec4899;
+            box-shadow: 0 12px 32px rgba(236, 72, 153, 0.15);
+        }
+
+        .mode-card.m-radius:hover {
+            border-color: #8b5cf6;
+            box-shadow: 0 12px 32px rgba(139, 92, 246, 0.15);
+        }
+
+        .mode-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .mode-card.m-bg .mode-icon {
+            background: #eef2ff;
+        }
+
+        .mode-card.m-convert .mode-icon {
             background: #f0f9ff;
         }
 
-        /* ── Image Card ── */
+        .mode-card.m-resize .mode-icon {
+            background: #ecfdf5;
+        }
+
+        .mode-card.m-rotate .mode-icon {
+            background: #fffbeb;
+        }
+
+        .mode-card.m-padding .mode-icon {
+            background: #fdf2f8;
+        }
+
+        .mode-card.m-radius .mode-icon {
+            background: #f5f3ff;
+        }
+
+        /* Drop zone */
+        #drop-zone {
+            border: 2px dashed #cbd5e1;
+            transition: border-color 0.25s, background 0.25s;
+            border-radius: 20px;
+        }
+
+        #drop-zone.drag-over {
+            border-color: #6366f1;
+            background: #eef2ff;
+        }
+
+        /* Cards */
         .img-card {
-            animation: fadeUp 0.35s ease both;
+            animation: fadeUp 0.3s ease both;
         }
 
         @keyframes fadeUp {
             from {
                 opacity: 0;
-                transform: translateY(16px);
+                transform: translateY(14px);
             }
 
             to {
@@ -46,74 +156,14 @@
             }
         }
 
-        /* ── Before/After slider ── */
-        .ba-wrapper {
-            position: relative;
-            overflow: hidden;
-            border-radius: 10px;
-            cursor: col-resize;
-            user-select: none;
-        }
-
-        .ba-after {
-            position: absolute;
-            inset: 0;
-            overflow: hidden;
-        }
-
-        .ba-after img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .ba-before img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: block;
-        }
-
-        .ba-divider {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: #0ea5e9;
-            cursor: col-resize;
-            z-index: 10;
-        }
-
-        .ba-handle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 36px;
-            height: 36px;
-            background: #0ea5e9;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-        }
-
-        .ba-handle svg {
-            color: white;
-        }
-
-        /* ── Status badge ── */
+        /* Status badges */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 10px;
+            padding: 3px 10px;
             border-radius: 999px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
         }
 
@@ -132,12 +182,12 @@
             color: #991b1b;
         }
 
-        /* ── Progress bar ── */
+        /* Progress bar */
         #global-progress-bar {
             transition: width 0.4s ease;
         }
 
-        /* ── Scrollbar ── */
+        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -150,6 +200,149 @@
             background: #cbd5e1;
             border-radius: 3px;
         }
+
+        /* Settings tabs */
+        .settings-panel {
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        /* Checkerboard for transparent preview */
+        .checker {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='8' height='8' fill='%23e2e8f0'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%23e2e8f0'/%3E%3Crect x='8' y='0' width='8' height='8' fill='%23f8fafc'/%3E%3Crect x='0' y='8' width='8' height='8' fill='%23f8fafc'/%3E%3C/svg%3E");
+        }
+
+        /* Toggle button group */
+        .btn-group {
+            display: flex;
+            gap: 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .btn-group button {
+            flex: 1;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: white;
+            color: #64748b;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .btn-group button.active {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-group button:not(:last-child) {
+            border-right: 1px solid #e2e8f0;
+        }
+
+        /* Range input */
+        input[type=range] {
+            accent-color: #6366f1;
+        }
+
+        /* Number input small */
+        .num-input {
+            width: 72px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 13px;
+            text-align: center;
+            outline: none;
+        }
+
+        .num-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Accent buttons */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #6366f1;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 9px 20px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, box-shadow 0.15s;
+        }
+
+        .btn-primary:hover {
+            background: #4f46e5;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-success {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #10b981;
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 9px 20px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-success:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: white;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 9px 16px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-ghost:hover {
+            background: #f8fafc;
+        }
+
+        /* Gradient preview */
+        #grad-preview {
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: background 0.3s;
+        }
     </style>
 </head>
 
@@ -160,7 +353,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="../index.html"
-                    class="flex items-center gap-3 text-slate-500 hover:text-sky-600 transition-colors text-sm font-medium">
+                    class="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors text-sm font-medium">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m15 18-6-6 6-6" />
@@ -171,450 +364,469 @@
                     <img src="https://www.vfairs.com/wp-content/themes/vfairs/assets/img/vfairs-logo.svg"
                         alt="vFairs Logo" class="h-7">
                     <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>
-                    <span class="text-sm font-semibold text-slate-500 hidden sm:block">PNG Background Adder</span>
+                    <span id="nav-title" class="text-sm font-semibold text-slate-500 hidden sm:block">Image Tools</span>
                 </div>
-                <div class="w-24"></div><!-- spacer -->
+                <div class="w-24"></div>
             </div>
         </div>
     </nav>
 
-    <!-- Hero -->
-    <div class="bg-white border-b border-slate-100">
-        <div class="max-w-4xl mx-auto px-6 py-10 text-center">
-            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 mb-5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                </svg>
+    <!-- ══ SCREEN 1: Mode Picker ══ -->
+    <div id="screen-picker" class="screen active flex-col flex-grow">
+        <div class="bg-white border-b border-slate-100">
+            <div class="max-w-4xl mx-auto px-6 py-10 text-center">
+                <div
+                    class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mb-5 text-2xl">
+                    🖼️</div>
+                <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Image Tools</h1>
+                <p class="text-slate-500 max-w-xl mx-auto">Choose what you'd like to do. Everything runs in your browser
+                    — no uploads, no server.</p>
             </div>
-            <h1 class="text-3xl font-extrabold text-slate-900 mb-2">PNG Background Adder</h1>
-            <p class="text-slate-500 max-w-xl mx-auto">Upload transparent PNGs, preview before &amp; after with a live
-                slider, then download all processed images as a ZIP — entirely in your browser, no uploads to any
-                server.</p>
         </div>
+        <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-10">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                <div class="mode-card m-bg" onclick="enterMode('bg')">
+                    <div class="mode-icon">🎨</div>
+                    <div>
+                        <p class="font-bold text-slate-800 text-base">Add Background</p>
+                        <p class="text-sm text-slate-500 mt-1">Add a solid color, gradient, or custom image behind
+                            transparent PNGs</p>
+                    </div>
+                    <span class="text-xs font-semibold text-indigo-500 mt-1">PNG input →</span>
+                </div>
+
+                <div class="mode-card m-convert" onclick="enterMode('convert')">
+                    <div class="mode-icon">🔄</div>
+                    <div>
+                        <p class="font-bold text-slate-800 text-base">Convert Format</p>
+                        <p class="text-sm text-slate-500 mt-1">Convert images between PNG, JPEG, and WebP formats</p>
+                    </div>
+                    <span class="text-xs font-semibold text-sky-500 mt-1">Any image →</span>
+                </div>
+
+                <div class="mode-card m-resize" onclick="enterMode('resize')">
+                    <div class="mode-icon">↔️</div>
+                    <div>
+                        <p class="font-bold text-slate-800 text-base">Resize Image</p>
+                        <p class="text-sm text-slate-500 mt-1">Scale to exact dimensions or a percentage, with aspect
+                            ratio lock</p>
+                    </div>
+                    <span class="text-xs font-semibold text-emerald-500 mt-1">Any image →</span>
+                </div>
+
+                <div class="mode-card m-rotate" onclick="enterMode('rotate')">
+                    <div class="mode-icon">🔃</div>
+                    <div>
+                        <p class="font-bold text-slate-800 text-base">Rotate & Flip</p>
+                        <p class="text-sm text-slate-500 mt-1">Rotate 90°/180° or flip horizontally and vertically</p>
+                    </div>
+                    <span class="text-xs font-semibold text-amber-500 mt-1">Any image →</span>
+                </div>
+
+                <div class="mode-card m-padding" onclick="enterMode('padding')">
+                    <div class="mode-icon">⬜</div>
+                    <div>
+                        <p class="font-bold text-slate-800 text-base">Add Padding</p>
+                        <p class="text-sm text-slate-500 mt-1">Expand the canvas with colored whitespace around the
+                            image</p>
+                    </div>
+                    <span class="text-xs font-semibold text-pink-500 mt-1">Any image →</span>
+                </div>
+
+                <div class="mode-card m-radius" onclick="enterMode('radius')">
+                    <div class="mode-icon">⭕</div>
+                    <div>
+                        <p class="font-bold text-slate-800 text-base">Border Radius / Shape</p>
+                        <p class="text-sm text-slate-500 mt-1">Round corners or make a perfect circle — outputs
+                            transparent PNG</p>
+                    </div>
+                    <span class="text-xs font-semibold text-violet-500 mt-1">Any image →</span>
+                </div>
+
+            </div>
+        </main>
     </div>
 
-    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-10 space-y-8">
+    <!-- ══ SCREEN 2: Tool UI ══ -->
+    <div id="screen-tool" class="screen flex-col flex-grow">
 
-        <!-- ── Settings Panel ── -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-            <h2 class="text-base font-semibold text-slate-800 mb-4">Settings</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <!-- BG Color -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1" for="bg-color">Background Color</label>
-                    <div class="flex items-center gap-3">
-                        <input type="color" id="bg-color" value="#ffffff"
-                            class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
-                        <input type="text" id="bg-color-hex" value="#ffffff"
-                            class="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-sky-400">
-                    </div>
-                </div>
-                <!-- Output Format -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1" for="output-format">Output
-                        Format</label>
-                    <select id="output-format"
-                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
-                        <option value="image/png">PNG</option>
-                        <option value="image/jpeg">JPEG</option>
-                        <option value="image/webp">WebP</option>
-                    </select>
-                </div>
-                <!-- Quality -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">
-                        Quality: <span id="quality-label" class="text-sky-600 font-semibold">95%</span>
-                    </label>
-                    <input type="range" id="quality" min="10" max="100" value="95" class="w-full accent-sky-500">
-                    <p class="text-xs text-slate-400 mt-1">Applies to JPEG / WebP only</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── Drop Zone ── -->
-        <div id="drop-zone"
-            class="rounded-2xl bg-white p-12 flex flex-col items-center justify-center gap-4 cursor-pointer select-none">
-            <div class="w-14 h-14 rounded-full bg-sky-50 flex items-center justify-center text-sky-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                </svg>
-            </div>
-            <div class="text-center">
-                <p class="font-semibold text-slate-700">Drop PNG files here</p>
-                <p class="text-sm text-slate-400 mt-1">or click to browse — multiple files supported</p>
-            </div>
-            <input type="file" id="file-input" accept="image/png" multiple class="hidden">
-        </div>
-
-        <!-- ── Action Bar ── -->
-        <div id="action-bar"
-            class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-wrap items-center gap-4">
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between mb-1.5">
-                    <span class="text-sm font-medium text-slate-600" id="progress-label">Ready to process</span>
-                    <span class="text-sm font-semibold text-sky-600" id="progress-count">0 / 0</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-2">
-                    <div id="global-progress-bar" class="bg-sky-500 h-2 rounded-full" style="width:0%"></div>
-                </div>
-            </div>
-            <div class="flex gap-3 flex-shrink-0">
-                <button id="btn-process-all"
-                    class="inline-flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="5 3 19 12 5 21 5 3" />
+        <!-- Mode header -->
+        <div class="bg-white border-b border-slate-100">
+            <div class="max-w-5xl mx-auto px-6 py-6 flex items-center gap-4">
+                <button onclick="exitMode()"
+                    class="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors text-sm font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6" />
                     </svg>
-                    Process All
+                    All Modes
                 </button>
-                <button id="btn-download-all" disabled
-                    class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="7 10 12 15 17 10" />
-                        <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                    Download ZIP
-                </button>
-                <button id="btn-clear"
-                    class="inline-flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors">
-                    Clear
-                </button>
+                <div class="h-5 w-px bg-slate-200"></div>
+                <div id="mode-header-icon" class="text-2xl"></div>
+                <div>
+                    <h2 id="mode-header-title" class="text-lg font-bold text-slate-900"></h2>
+                    <p id="mode-header-desc" class="text-sm text-slate-500"></p>
+                </div>
             </div>
         </div>
 
-        <!-- ── Image Cards Grid ── -->
-        <div id="cards-grid" class="grid grid-cols-1 gap-6"></div>
+        <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-8 space-y-6">
 
-    </main>
+            <!-- ── Settings Panel ── -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <h3 class="text-sm font-semibold text-slate-700 mb-4 uppercase tracking-wide">Settings</h3>
 
-    <footer class="text-center py-8 text-sm text-slate-400">
-        <p>&copy; 2025 vFairs. All rights reserved.</p>
-    </footer>
-
-    <script>
-        (() => {
-            // ── State ──────────────────────────────────────────────────────────
-            const state = {
-                files: [],       // { id, file, status:'pending'|'done'|'error', originalUrl, processedBlob, processedUrl }
-                nextId: 0,
-            };
-
-            // ── DOM refs ───────────────────────────────────────────────────────
-            const dropZone = document.getElementById('drop-zone');
-            const fileInput = document.getElementById('file-input');
-            const actionBar = document.getElementById('action-bar');
-            const cardsGrid = document.getElementById('cards-grid');
-            const btnProcessAll = document.getElementById('btn-process-all');
-            const btnDownloadAll = document.getElementById('btn-download-all');
-            const btnClear = document.getElementById('btn-clear');
-            const progressLabel = document.getElementById('progress-label');
-            const progressCount = document.getElementById('progress-count');
-            const progressBar = document.getElementById('global-progress-bar');
-            const bgColorPicker = document.getElementById('bg-color');
-            const bgColorHex = document.getElementById('bg-color-hex');
-            const outputFormat = document.getElementById('output-format');
-            const qualitySlider = document.getElementById('quality');
-            const qualityLabel = document.getElementById('quality-label');
-
-            // ── Settings sync ──────────────────────────────────────────────────
-            bgColorPicker.addEventListener('input', () => { bgColorHex.value = bgColorPicker.value; });
-            bgColorHex.addEventListener('input', () => {
-                if (/^#[0-9a-fA-F]{6}$/.test(bgColorHex.value)) bgColorPicker.value = bgColorHex.value;
-            });
-            qualitySlider.addEventListener('input', () => { qualityLabel.textContent = qualitySlider.value + '%'; });
-
-            // ── Drop zone ──────────────────────────────────────────────────────
-            dropZone.addEventListener('click', () => fileInput.click());
-            dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-            dropZone.addEventListener('drop', e => {
-                e.preventDefault();
-                dropZone.classList.remove('drag-over');
-                addFiles([...e.dataTransfer.files].filter(f => f.type === 'image/png'));
-            });
-            fileInput.addEventListener('change', () => {
-                addFiles([...fileInput.files]);
-                fileInput.value = '';
-            });
-
-            // ── Add files ──────────────────────────────────────────────────────
-            function addFiles(files) {
-                if (!files.length) return;
-                files.forEach(file => {
-                    const id = state.nextId++;
-                    const originalUrl = URL.createObjectURL(file);
-                    const entry = { id, file, status: 'pending', originalUrl, processedBlob: null, processedUrl: null };
-                    state.files.push(entry);
-                    renderCard(entry);
-                });
-                actionBar.classList.remove('hidden');
-                updateProgress();
-            }
-
-            // ── Render a card ──────────────────────────────────────────────────
-            function renderCard(entry) {
-                const card = document.createElement('div');
-                card.className = 'img-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden';
-                card.id = `card-${entry.id}`;
-                card.innerHTML = `
-                <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center text-sky-500 flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        </div>
-                        <span class="text-sm font-semibold text-slate-800 truncate" title="${entry.file.name}">${entry.file.name}</span>
-                        <span class="text-xs text-slate-400 flex-shrink-0">${formatBytes(entry.file.size)}</span>
-                    </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <span id="badge-${entry.id}" class="status-badge status-pending">
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span> Pending
-                        </span>
-                        <button id="btn-process-${entry.id}"
-                            class="text-xs font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 px-3 py-1.5 rounded-lg transition-colors"
-                            onclick="window._processOne(${entry.id})">
-                            Process
-                        </button>
-                        <button id="btn-dl-${entry.id}" disabled
-                            class="text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-700 px-3 py-1.5 rounded-lg transition-colors"
-                            onclick="window._downloadOne(${entry.id})">
-                            ↓ Save
-                        </button>
-                        <button class="text-slate-400 hover:text-red-500 transition-colors p-1 rounded"
-                            onclick="window._removeCard(${entry.id})" title="Remove">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="p-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <!-- Before -->
+                <!-- BG Mode Settings -->
+                <div id="settings-bg" class="settings-panel">
+                    <div class="space-y-4">
                         <div>
-                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Before (original)</p>
-                            <div class="rounded-xl overflow-hidden bg-[url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%3E%3Crect%20width%3D%228%22%20height%3D%228%22%20fill%3D%22%23e2e8f0%22%2F%3E%3Crect%20x%3D%228%22%20y%3D%228%22%20width%3D%228%22%20height%3D%228%22%20fill%3D%22%23e2e8f0%22%2F%3E%3Crect%20x%3D%228%22%20y%3D%220%22%20width%3D%228%22%20height%3D%228%22%20fill%3D%22%23f8fafc%22%2F%3E%3Crect%20x%3D%220%22%20y%3D%228%22%20width%3D%228%22%20height%3D%228%22%20fill%3D%22%23f8fafc%22%2F%3E%3C%2Fsvg%3E')] border border-slate-100" style="height:200px;display:flex;align-items:center;justify-content:center;">
-                                <img src="${entry.originalUrl}" alt="Before" style="max-width:100%;max-height:200px;object-fit:contain;">
+                            <label class="block text-sm font-medium text-slate-600 mb-2">Background Type</label>
+                            <div class="btn-group" id="bg-type-group">
+                                <button class="active" onclick="setBgType('solid')">Solid Color</button>
+                                <button onclick="setBgType('gradient')">Gradient</button>
+                                <button onclick="setBgType('image')">Image</button>
                             </div>
                         </div>
-                        <!-- After -->
-                        <div>
-                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">After (white background)</p>
-                            <div id="after-${entry.id}" class="rounded-xl overflow-hidden bg-white border border-slate-100 flex items-center justify-center" style="height:200px;">
-                                <span class="text-sm text-slate-300 italic">Not processed yet</span>
+                        <!-- Solid -->
+                        <div id="bg-solid-opts">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Color</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" id="bg-color" value="#ffffff"
+                                    class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
+                                <input type="text" id="bg-color-hex" value="#ffffff"
+                                    class="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400">
                             </div>
                         </div>
-                    </div>
-                    <!-- Slider preview (hidden until processed) -->
-                    <div id="slider-wrap-${entry.id}" class="hidden mt-4">
-                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Drag to compare</p>
-                        <div class="ba-wrapper border border-slate-100" id="ba-${entry.id}" style="height:220px;">
-                            <div class="ba-before" style="width:100%;height:100%;">
-                                <img src="${entry.originalUrl}" alt="Before" style="background:repeating-conic-gradient(#e2e8f0 0% 25%,#f8fafc 0% 50%) 0 0/16px 16px;">
-                            </div>
-                            <div class="ba-after" id="ba-after-${entry.id}" style="width:50%;">
-                                <img id="ba-after-img-${entry.id}" src="" alt="After">
-                            </div>
-                            <div class="ba-divider" id="ba-div-${entry.id}" style="left:50%;">
-                                <div class="ba-handle">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/><polyline points="9 18 3 12 9 6" transform="translate(6,0)"/></svg>
+                        <!-- Gradient -->
+                        <div id="bg-gradient-opts" class="hidden space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Color 1</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" id="grad-color1" value="#6366f1"
+                                            class="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5">
+                                        <input type="text" id="grad-hex1" value="#6366f1"
+                                            class="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-500 mb-1">Color 2</label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="color" id="grad-color2" value="#ec4899"
+                                            class="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5">
+                                        <input type="text" id="grad-hex2" value="#ec4899"
+                                            class="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    </div>
                                 </div>
                             </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Direction</label>
+                                <div class="btn-group" id="grad-dir-group">
+                                    <button class="active" onclick="setGradDir('to right')">→ Horizontal</button>
+                                    <button onclick="setGradDir('to bottom')">↓ Vertical</button>
+                                    <button onclick="setGradDir('to bottom right')">↘ Diagonal</button>
+                                </div>
+                            </div>
+                            <div id="grad-preview"></div>
+                        </div>
+                        <!-- BG Image -->
+                        <div id="bg-image-opts" class="hidden">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Background Image</label>
+                            <input type="file" id="bg-image-input" accept="image/*"
+                                class="block w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            <p class="text-xs text-slate-400 mt-1">The background image will be stretched to fit each
+                                image's dimensions.</p>
+                        </div>
+                        <!-- Format + Quality -->
+                        <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Output Format</label>
+                                <select id="bg-format"
+                                    class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                                    <option value="image/png">PNG</option>
+                                    <option value="image/jpeg">JPEG</option>
+                                    <option value="image/webp">WebP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Quality: <span
+                                        id="bg-quality-label" class="text-indigo-600 font-semibold">95%</span></label>
+                                <input type="range" id="bg-quality" min="10" max="100" value="95" class="w-full">
+                                <p class="text-xs text-slate-400 mt-1">JPEG / WebP only</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            `;
-                cardsGrid.appendChild(card);
-                initSlider(entry.id);
-            }
 
-            // ── Before/After Slider ────────────────────────────────────────────
-            function initSlider(id) {
-                const wrap = document.getElementById(`ba-${id}`);
-                const divider = document.getElementById(`ba-div-${id}`);
-                const afterEl = document.getElementById(`ba-after-${id}`);
-                if (!wrap) return;
-                let dragging = false;
+                <!-- Convert Settings -->
+                <div id="settings-convert" class="settings-panel">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Output Format</label>
+                            <select id="conv-format"
+                                class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                                <option value="image/png">PNG</option>
+                                <option value="image/jpeg">JPEG</option>
+                                <option value="image/webp">WebP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Quality: <span
+                                    id="conv-quality-label" class="text-indigo-600 font-semibold">95%</span></label>
+                            <input type="range" id="conv-quality" min="10" max="100" value="95" class="w-full">
+                            <p class="text-xs text-slate-400 mt-1">JPEG / WebP only</p>
+                        </div>
+                    </div>
+                </div>
 
-                function setPos(x) {
-                    const rect = wrap.getBoundingClientRect();
-                    let pct = Math.min(Math.max((x - rect.left) / rect.width, 0), 1) * 100;
-                    divider.style.left = pct + '%';
-                    afterEl.style.width = pct + '%';
-                }
+                <!-- Resize Settings -->
+                <div id="settings-resize" class="settings-panel">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-2">Resize Mode</label>
+                            <div class="btn-group" id="resize-mode-group">
+                                <button class="active" onclick="setResizeMode('dimensions')">By Dimensions</button>
+                                <button onclick="setResizeMode('percent')">By Percentage</button>
+                            </div>
+                        </div>
+                        <div id="resize-dims-opts" class="flex items-center gap-3 flex-wrap">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Width (px)</label>
+                                <input type="number" id="resize-w" min="1" max="8000" placeholder="auto"
+                                    class="num-input">
+                            </div>
+                            <div class="pt-4 text-slate-400 font-bold">×</div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Height (px)</label>
+                                <input type="number" id="resize-h" min="1" max="8000" placeholder="auto"
+                                    class="num-input">
+                            </div>
+                            <div class="pt-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="resize-lock" checked class="accent-indigo-600 w-4 h-4">
+                                    <span class="text-sm text-slate-600">Lock aspect ratio</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="resize-pct-opts" class="hidden flex items-center gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Scale (%)</label>
+                                <input type="number" id="resize-pct" min="1" max="1000" value="50" class="num-input">
+                            </div>
+                            <span class="pt-4 text-sm text-slate-500">of original size</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Output Format</label>
+                                <select id="resize-format"
+                                    class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                                    <option value="image/png">PNG</option>
+                                    <option value="image/jpeg">JPEG</option>
+                                    <option value="image/webp">WebP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Quality: <span
+                                        id="resize-quality-label"
+                                        class="text-indigo-600 font-semibold">95%</span></label>
+                                <input type="range" id="resize-quality" min="10" max="100" value="95" class="w-full">
+                                <p class="text-xs text-slate-400 mt-1">JPEG / WebP only</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                divider.addEventListener('mousedown', e => { dragging = true; e.preventDefault(); });
-                wrap.addEventListener('mousemove', e => { if (dragging) setPos(e.clientX); });
-                window.addEventListener('mouseup', () => { dragging = false; });
+                <!-- Rotate Settings -->
+                <div id="settings-rotate" class="settings-panel">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-2">Rotation</label>
+                            <div class="btn-group" id="rotate-group">
+                                <button class="active" onclick="setRotate(0)">None</button>
+                                <button onclick="setRotate(90)">90° CW</button>
+                                <button onclick="setRotate(180)">180°</button>
+                                <button onclick="setRotate(270)">90° CCW</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-2">Flip</label>
+                            <div class="btn-group" id="flip-group">
+                                <button class="active" onclick="setFlip('none')">None</button>
+                                <button onclick="setFlip('h')">Horizontal</button>
+                                <button onclick="setFlip('v')">Vertical</button>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Output Format</label>
+                                <select id="rotate-format"
+                                    class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                                    <option value="image/png">PNG</option>
+                                    <option value="image/jpeg">JPEG</option>
+                                    <option value="image/webp">WebP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Quality: <span
+                                        id="rotate-quality-label"
+                                        class="text-indigo-600 font-semibold">95%</span></label>
+                                <input type="range" id="rotate-quality" min="10" max="100" value="95" class="w-full">
+                                <p class="text-xs text-slate-400 mt-1">JPEG / WebP only</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                divider.addEventListener('touchstart', e => { dragging = true; e.preventDefault(); }, { passive: false });
-                wrap.addEventListener('touchmove', e => { if (dragging) setPos(e.touches[0].clientX); }, { passive: true });
-                window.addEventListener('touchend', () => { dragging = false; });
-            }
+                <!-- Padding Settings -->
+                <div id="settings-padding" class="settings-panel">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-2">Padding (px)</label>
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <div><label class="block text-xs text-slate-500 mb-1">Top</label><input type="number"
+                                        id="pad-top" value="20" min="0" max="2000" class="num-input"></div>
+                                <div><label class="block text-xs text-slate-500 mb-1">Right</label><input type="number"
+                                        id="pad-right" value="20" min="0" max="2000" class="num-input"></div>
+                                <div><label class="block text-xs text-slate-500 mb-1">Bottom</label><input type="number"
+                                        id="pad-bottom" value="20" min="0" max="2000" class="num-input"></div>
+                                <div><label class="block text-xs text-slate-500 mb-1">Left</label><input type="number"
+                                        id="pad-left" value="20" min="0" max="2000" class="num-input"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Padding Color</label>
+                            <div class="flex items-center gap-3">
+                                <input type="color" id="pad-color" value="#ffffff"
+                                    class="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5">
+                                <input type="text" id="pad-color-hex" value="#ffffff"
+                                    class="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Output Format</label>
+                                <select id="pad-format"
+                                    class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                                    <option value="image/png">PNG</option>
+                                    <option value="image/jpeg">JPEG</option>
+                                    <option value="image/webp">WebP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-600 mb-1">Quality: <span
+                                        id="pad-quality-label" class="text-indigo-600 font-semibold">95%</span></label>
+                                <input type="range" id="pad-quality" min="10" max="100" value="95" class="w-full">
+                                <p class="text-xs text-slate-400 mt-1">JPEG / WebP only</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            // ── Process one image ──────────────────────────────────────────────
-            window._processOne = async function (id) {
-                const entry = state.files.find(f => f.id === id);
-                if (!entry || entry.status === 'done') return;
+                <!-- Radius Settings -->
+                <div id="settings-radius" class="settings-panel">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-2">Shape Preset</label>
+                            <div class="btn-group" id="radius-preset-group">
+                                <button class="active" onclick="setRadiusPreset('circle')">⭕ Circle</button>
+                                <button onclick="setRadiusPreset('rounded')">▢ Rounded</button>
+                                <button onclick="setRadiusPreset('custom')">✏️ Custom</button>
+                            </div>
+                        </div>
+                        <div id="radius-rounded-opts" class="hidden">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Radius: <span id="radius-label"
+                                    class="text-indigo-600 font-semibold">20%</span></label>
+                            <input type="range" id="radius-slider" min="0" max="50" value="20" class="w-full">
+                        </div>
+                        <div id="radius-custom-opts" class="hidden">
+                            <label class="block text-sm font-medium text-slate-600 mb-2">Corner Radii (px)</label>
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <div><label class="block text-xs text-slate-500 mb-1">Top-Left</label><input
+                                        type="number" id="rad-tl" value="20" min="0" max="2000" class="num-input"></div>
+                                <div><label class="block text-xs text-slate-500 mb-1">Top-Right</label><input
+                                        type="number" id="rad-tr" value="20" min="0" max="2000" class="num-input"></div>
+                                <div><label class="block text-xs text-slate-500 mb-1">Bottom-Right</label><input
+                                        type="number" id="rad-br" value="20" min="0" max="2000" class="num-input"></div>
+                                <div><label class="block text-xs text-slate-500 mb-1">Bottom-Left</label><input
+                                        type="number" id="rad-bl" value="20" min="0" max="2000" class="num-input"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Background Fill
+                                (optional)</label>
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="radius-fill-enable" class="accent-indigo-600 w-4 h-4">
+                                <label for="radius-fill-enable" class="text-sm text-slate-600">Fill background
+                                    color</label>
+                                <input type="color" id="radius-fill-color" value="#ffffff"
+                                    class="w-9 h-9 rounded-lg border border-slate-200 cursor-pointer p-0.5 ml-2">
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">Output is always PNG to preserve transparency.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                setBadge(id, 'processing');
-                document.getElementById(`btn-process-${id}`).disabled = true;
+            <!-- ── Drop Zone ── -->
+            <div id="drop-zone"
+                class="bg-white p-12 flex flex-col items-center justify-center gap-4 cursor-pointer select-none">
+                <div class="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                </div>
+                <div class="text-center">
+                    <p class="font-semibold text-slate-700" id="drop-label">Drop images here</p>
+                    <p class="text-sm text-slate-400 mt-1">or click to browse — multiple files supported</p>
+                </div>
+                <input type="file" id="file-input" accept="image/*" multiple class="hidden">
+            </div>
 
-                try {
-                    const blob = await addWhiteBackground(entry.file);
-                    entry.processedBlob = blob;
-                    entry.processedUrl = URL.createObjectURL(blob);
-                    entry.status = 'done';
+            <!-- ── Action Bar ── -->
+            <div id="action-bar"
+                class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-sm font-medium text-slate-600" id="progress-label">Ready to process</span>
+                        <span class="text-sm font-semibold text-indigo-600" id="progress-count">0 / 0</span>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-2">
+                        <div id="global-progress-bar" class="bg-indigo-500 h-2 rounded-full" style="width:0%"></div>
+                    </div>
+                </div>
+                <div class="flex gap-3 flex-shrink-0">
+                    <button id="btn-process-all" class="btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                        Process All
+                    </button>
+                    <button id="btn-download-all" disabled class="btn-success">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Download ZIP
+                    </button>
+                    <button id="btn-clear" class="btn-ghost">Clear</button>
+                </div>
+            </div>
 
-                    // Update after panel
-                    const afterDiv = document.getElementById(`after-${id}`);
-                    afterDiv.innerHTML = `<img src="${entry.processedUrl}" alt="After" style="max-width:100%;max-height:200px;object-fit:contain;">`;
+            <!-- ── Cards Grid ── -->
+            <div id="cards-grid" class="grid grid-cols-1 gap-5"></div>
+        </main>
+    </div>
 
-                    // Show slider
-                    document.getElementById(`ba-after-img-${id}`).src = entry.processedUrl;
-                    document.getElementById(`slider-wrap-${id}`).classList.remove('hidden');
+    <footer class="text-center py-6 text-sm text-slate-400">© 2025 vFairs. All rights reserved.</footer>
 
-                    setBadge(id, 'done');
-                    document.getElementById(`btn-dl-${id}`).disabled = false;
-                } catch (err) {
-                    entry.status = 'error';
-                    setBadge(id, 'error');
-                    console.error(err);
-                }
-
-                updateProgress();
-            };
-
-            // ── Download one ───────────────────────────────────────────────────
-            window._downloadOne = function (id) {
-                const entry = state.files.find(f => f.id === id);
-                if (!entry || !entry.processedBlob) return;
-                const ext = outputFormat.value.split('/')[1];
-                const a = document.createElement('a');
-                a.href = entry.processedUrl;
-                a.download = entry.file.name.replace(/\.png$/i, '') + '_bg.' + ext;
-                a.click();
-            };
-
-            // ── Remove card ────────────────────────────────────────────────────
-            window._removeCard = function (id) {
-                state.files = state.files.filter(f => f.id !== id);
-                document.getElementById(`card-${id}`)?.remove();
-                if (!state.files.length) actionBar.classList.add('hidden');
-                updateProgress();
-            };
-
-            // ── Process all ────────────────────────────────────────────────────
-            btnProcessAll.addEventListener('click', async () => {
-                btnProcessAll.disabled = true;
-                const pending = state.files.filter(f => f.status === 'pending');
-                for (const entry of pending) {
-                    await window._processOne(entry.id);
-                }
-                btnProcessAll.disabled = false;
-            });
-
-            // ── Download all as ZIP ────────────────────────────────────────────
-            btnDownloadAll.addEventListener('click', async () => {
-                const done = state.files.filter(f => f.status === 'done');
-                if (!done.length) return;
-
-                btnDownloadAll.textContent = 'Zipping…';
-                btnDownloadAll.disabled = true;
-
-                const zip = new JSZip();
-                const ext = outputFormat.value.split('/')[1];
-                for (const entry of done) {
-                    const name = entry.file.name.replace(/\.png$/i, '') + '_bg.' + ext;
-                    zip.file(name, entry.processedBlob);
-                }
-                const content = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(content);
-                a.download = 'images_with_background.zip';
-                a.click();
-
-                btnDownloadAll.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download ZIP`;
-                btnDownloadAll.disabled = false;
-            });
-
-            // ── Clear all ──────────────────────────────────────────────────────
-            btnClear.addEventListener('click', () => {
-                state.files = [];
-                state.nextId = 0;
-                cardsGrid.innerHTML = '';
-                actionBar.classList.add('hidden');
-                updateProgress();
-            });
-
-            // ── Core: add white background via Canvas ──────────────────────────
-            function addWhiteBackground(file) {
-                return new Promise((resolve, reject) => {
-                    const img = new Image();
-                    const url = URL.createObjectURL(file);
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.naturalWidth;
-                        canvas.height = img.naturalHeight;
-                        const ctx = canvas.getContext('2d');
-
-                        // Fill background
-                        ctx.fillStyle = bgColorPicker.value;
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                        // Draw original image on top
-                        ctx.drawImage(img, 0, 0);
-
-                        URL.revokeObjectURL(url);
-
-                        const fmt = outputFormat.value;
-                        const quality = parseInt(qualitySlider.value) / 100;
-                        canvas.toBlob(blob => {
-                            if (blob) resolve(blob);
-                            else reject(new Error('Canvas toBlob failed'));
-                        }, fmt, quality);
-                    };
-                    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
-                    img.src = url;
-                });
-            }
-
-            // ── Helpers ────────────────────────────────────────────────────────
-            function setBadge(id, status) {
-                const badge = document.getElementById(`badge-${id}`);
-                if (!badge) return;
-                const map = {
-                    pending: { cls: 'status-pending', dot: 'bg-amber-400', label: 'Pending' },
-                    processing: { cls: 'status-pending', dot: 'bg-sky-400 animate-pulse', label: 'Processing…' },
-                    done: { cls: 'status-done', dot: 'bg-emerald-500', label: 'Done' },
-                    error: { cls: 'status-error', dot: 'bg-red-500', label: 'Error' },
-                };
-                const m = map[status] || map.pending;
-                badge.className = `status-badge ${m.cls}`;
-                badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${m.dot} inline-block"></span> ${m.label}`;
-            }
-
-            function updateProgress() {
-                const total = state.files.length;
-                const done = state.files.filter(f => f.status === 'done').length;
-                progressCount.textContent = `${done} / ${total}`;
-                progressBar.style.width = total ? (done / total * 100) + '%' : '0%';
-                progressLabel.textContent = done === total && total > 0 ? 'All done!' : `${total - done} image(s) pending`;
-                btnDownloadAll.disabled = done === 0;
-            }
-
-            function formatBytes(bytes) {
-                if (bytes < 1024) return bytes + ' B';
-                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-                return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-            }
-        })();
-    </script>
+    <script src="app.js"></script>
 </body>
 
 </html>
