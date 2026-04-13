@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Compress images easily in your browser. Batch compress multiple images, preview full-size, and download as ZIP.">
+    <meta name="tool-name" content="Image Compressor">
+    <title>Image Compressor — vFairs Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; }
+
+        /* ── Drop zone ── */
+        #drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 20px;
+            transition: border-color 0.25s, background 0.25s;
+        }
+        #drop-zone.drag-over {
+            border-color: #6366f1;
+            background: #eef2ff;
+        }
+
+        input[type=range] { accent-color: #6366f1; }
+
+        /* ── Preset buttons ── */
+        .preset-btn {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            background: white;
+            color: #64748b;
+            transition: all 0.18s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            text-align: center;
+        }
+        .preset-btn:hover { border-color: #6366f1; color: #6366f1; background: #eef2ff; }
+        .preset-btn.active { border-color: #6366f1; background: #eef2ff; color: #4f46e5; }
+        .preset-sub { font-size: 10px; font-weight: 500; opacity: 0.65; }
+
+        /* ── Format tab group ── */
+        .fmt-group { display: flex; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+        .fmt-btn {
+            flex: 1; padding: 8px 10px;
+            font-size: 12px; font-weight: 600;
+            background: white; color: #64748b;
+            border: none; cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+        .fmt-btn.active { background: #6366f1; color: white; }
+        .fmt-btn:not(:last-child) { border-right: 1px solid #e2e8f0; }
+
+        /* ── Image cards ── */
+        .img-card {
+            animation: fadeUp 0.3s ease both;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Status badges ── */
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 999px;
+            font-size: 11px; font-weight: 600;
+        }
+        .s-pending  { background: #fef9c3; color: #854d0e; }
+        .s-working  { background: #e0e7ff; color: #3730a3; }
+        .s-done     { background: #dcfce7; color: #166534; }
+        .s-bigger   { background: #fee2e2; color: #991b1b; }
+        .s-error    { background: #fee2e2; color: #991b1b; }
+
+        /* ── Progress bar ── */
+        #global-progress-bar { transition: width 0.4s ease; }
+
+        /* ── Lightbox ── */
+        #lightbox {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.22s;
+            padding: 20px;
+        }
+        #lightbox.open { opacity: 1; pointer-events: auto; }
+        #lightbox img {
+            max-width: 100%; max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+            transform: scale(0.93); transition: transform 0.22s;
+        }
+        #lightbox.open img { transform: scale(1); }
+        #lightbox-close {
+            position: absolute; top: 20px; right: 20px;
+            background: white; border: none; border-radius: 50%;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 18px; color: #334155;
+            transition: background 0.15s;
+        }
+        #lightbox-close:hover { background: #f1f5f9; }
+        #lightbox-caption {
+            position: absolute; bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(8px);
+            color: white; font-size: 12px; font-weight: 600;
+            padding: 6px 16px; border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: #6366f1; color: white;
+            font-size: 13px; font-weight: 600;
+            padding: 9px 20px; border-radius: 12px;
+            border: none; cursor: pointer;
+            transition: background 0.15s, box-shadow 0.15s;
+        }
+        .btn-primary:hover { background: #4f46e5; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+        .btn-success {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: #10b981; color: white;
+            font-size: 13px; font-weight: 600;
+            padding: 9px 20px; border-radius: 12px;
+            border: none; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-success:hover { background: #059669; }
+        .btn-success:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .btn-ghost {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: white; color: #64748b;
+            font-size: 13px; font-weight: 600;
+            padding: 9px 16px; border-radius: 12px;
+            border: 1px solid #e2e8f0; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-ghost:hover { background: #f8fafc; }
+
+        /* ── Spinner ── */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            width: 15px; height: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.7s linear infinite; flex-shrink: 0;
+        }
+        .spinner-indigo {
+            width: 14px; height: 14px;
+            border: 2px solid #c7d2fe;
+            border-top-color: #6366f1; border-radius: 50%;
+            animation: spin 0.7s linear infinite; flex-shrink: 0;
+            display: inline-block;
+        }
+
+        /* ── Checker bg ── */
+        .checker {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect width='8' height='8' fill='%23e2e8f0'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%23e2e8f0'/%3E%3Crect x='8' y='0' width='8' height='8' fill='%23f8fafc'/%3E%3Crect x='0' y='8' width='8' height='8' fill='%23f8fafc'/%3E%3C/svg%3E");
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen flex flex-col text-slate-800">
+
+    <!-- Nav -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="../index.html"
+                    class="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors text-sm font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    All Tools
+                </a>
+                <div class="flex items-center gap-3">
+                    <img src="https://www.vfairs.com/wp-content/themes/vfairs/assets/img/vfairs-logo.svg"
+                        alt="vFairs Logo" class="h-7">
+                    <div class="h-5 w-px bg-slate-200 hidden sm:block"></div>
+                    <span class="text-sm font-semibold text-slate-500 hidden sm:block">Image Compressor</span>
+                </div>
+                <div class="w-24"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="bg-white border-b border-slate-100">
+        <div class="max-w-5xl mx-auto px-6 py-10 text-center">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 mb-5 text-2xl">🗜️</div>
+            <h1 class="text-3xl font-extrabold text-slate-900 mb-2">Image Compressor</h1>
+            <p class="text-slate-500 max-w-lg mx-auto">
+                Compress one or many images at once. Choose compression strength, pick a format, preview the result full-size,
+                and download individually or as a ZIP — all in your browser.
+            </p>
+        </div>
+    </div>
+
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-8 space-y-5">
+
+        <!-- Settings panel -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-5">Compression Settings <span class="normal-case font-normal">(applied to all images)</span></h3>
+
+            <div class="space-y-5">
+                <!-- Compression presets -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-sm font-semibold text-slate-700">Compression Strength</label>
+                        <span id="quality-badge" class="text-xs font-bold px-3 py-0.5 rounded-full bg-indigo-50 text-indigo-600">Low</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">More compression = smaller file, but lower quality. Images re-use these settings every time you recompress.</p>
+                    <div class="grid grid-cols-4 gap-2 mb-3">
+                        <button class="preset-btn" id="preset-none"   onclick="applyPreset('none')">
+                            <span>✅</span><span>None</span><span class="preset-sub">Lossless</span>
+                        </button>
+                        <button class="preset-btn active" id="preset-low"    onclick="applyPreset('low')">
+                            <span>🔵</span><span>Low</span><span class="preset-sub">Slight</span>
+                        </button>
+                        <button class="preset-btn" id="preset-medium" onclick="applyPreset('medium')">
+                            <span>🟡</span><span>Medium</span><span class="preset-sub">Balanced</span>
+                        </button>
+                        <button class="preset-btn" id="preset-high"   onclick="applyPreset('high')">
+                            <span>🔴</span><span>High</span><span class="preset-sub">Smallest</span>
+                        </button>
+                    </div>
+                    <!-- Slider as visual companion -->
+                    <input type="range" id="compress-slider" min="1" max="4" step="1" value="2" class="w-full">
+                    <div class="flex justify-between mt-1">
+                        <span class="text-xs font-semibold text-slate-400">← Keeps more quality</span>
+                        <span class="text-xs font-semibold text-slate-400">Smallest file →</span>
+                    </div>
+                </div>
+
+                <!-- Output format -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Output Format</label>
+                    <p id="format-note" class="text-xs text-slate-400 mb-2">JPEG and WebP support lossy compression. PNG is always lossless.</p>
+                    <div class="fmt-group" id="format-group">
+                        <button class="fmt-btn active" onclick="setFormat('image/jpeg')">JPEG</button>
+                        <button class="fmt-btn"        onclick="setFormat('image/webp')">WebP <span class="opacity-60">(recommended)</span></button>
+                        <button class="fmt-btn"        onclick="setFormat('image/png')">PNG (lossless)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drop zone -->
+        <div id="drop-zone"
+            class="bg-white p-12 flex flex-col items-center justify-center gap-4 cursor-pointer select-none text-center">
+            <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center text-3xl">📁</div>
+            <div>
+                <p class="font-semibold text-slate-700 text-lg">Drop images here</p>
+                <p class="text-sm text-slate-400 mt-1">or click to browse — JPEG, PNG, WebP · multiple files supported</p>
+            </div>
+            <p class="text-xs text-slate-300">Everything runs in your browser. Nothing is uploaded to any server.</p>
+            <input type="file" id="file-input" accept="image/*" multiple class="hidden">
+        </div>
+
+        <!-- Action bar (shown after files added) -->
+        <div id="action-bar" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-wrap items-center gap-4">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-sm font-medium text-slate-600" id="progress-label">Ready to compress</span>
+                    <span class="text-sm font-semibold text-indigo-600" id="progress-count">0 / 0</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div id="global-progress-bar" class="bg-indigo-500 h-2 rounded-full" style="width:0%"></div>
+                </div>
+            </div>
+            <div class="flex gap-2 flex-shrink-0 flex-wrap">
+                <button id="btn-compress-all" class="btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    Compress All
+                </button>
+                <button id="btn-download-zip" disabled class="btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download ZIP
+                </button>
+                <button id="btn-clear" class="btn-ghost">Clear</button>
+            </div>
+        </div>
+
+        <!-- Cards grid -->
+        <div id="cards-grid" class="space-y-4"></div>
+
+    </main>
+
+    <footer class="text-center py-6 text-sm text-slate-400">© 2026 vFairs PM Team. All rights reserved.</footer>
+
+    <!-- Lightbox -->
+    <div id="lightbox" onclick="closeLightbox(event)">
+        <button id="lightbox-close" onclick="closeLightbox()" title="Close">✕</button>
+        <img id="lightbox-img" src="" alt="Preview">
+        <div id="lightbox-caption"></div>
+    </div>
+
+    <script>
+    (() => {
+        // ─── Compression step config ───────────────────────────────────────────
+        //  Slider goes 1→4 = None→High, meaning MORE compression as you go right.
+        //  Quality values are passed to canvas.toBlob() (0–1).
+        const STEPS = {
+            1: { label: 'None',   quality: 0.95, preset: 'none'   },
+            2: { label: 'Low',    quality: 0.78, preset: 'low'    },
+            3: { label: 'Medium', quality: 0.55, preset: 'medium' },
+            4: { label: 'High',   quality: 0.28, preset: 'high'   },
+        };
+
+        // ─── State ────────────────────────────────────────────────────────────
+        const state = {
+            files:      [],   // { id, file, originalUrl, processedBlob, processedUrl, status }
+            nextId:     0,
+            sliderStep: 2,
+            format:     'image/jpeg',
+        };
+
+        // ─── DOM refs ─────────────────────────────────────────────────────────
+        const dropZone       = document.getElementById('drop-zone');
+        const fileInput      = document.getElementById('file-input');
+        const actionBar      = document.getElementById('action-bar');
+        const cardsGrid      = document.getElementById('cards-grid');
+        const btnCompressAll = document.getElementById('btn-compress-all');
+        const btnDownloadZip = document.getElementById('btn-download-zip');
+        const btnClear       = document.getElementById('btn-clear');
+        const progressLabel  = document.getElementById('progress-label');
+        const progressCount  = document.getElementById('progress-count');
+        const progressBar    = document.getElementById('global-progress-bar');
+        const compressSlider = document.getElementById('compress-slider');
+        const qualityBadge   = document.getElementById('quality-badge');
+        const lightbox       = document.getElementById('lightbox');
+        const lightboxImg    = document.getElementById('lightbox-img');
+        const lightboxCap    = document.getElementById('lightbox-caption');
+
+        // ─── Drop zone ────────────────────────────────────────────────────────
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const imgs = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+            addFiles(imgs);
+        });
+        fileInput.addEventListener('change', () => {
+            addFiles([...fileInput.files]);
+            fileInput.value = '';
+        });
+
+        // ─── Add files ────────────────────────────────────────────────────────
+        function addFiles(files) {
+            if (!files.length) return;
+            files.forEach(file => {
+                const id = state.nextId++;
+                const originalUrl = URL.createObjectURL(file);
+                state.files.push({ id, file, originalUrl, processedBlob: null, processedUrl: null, status: 'pending' });
+                renderCard(id, file, originalUrl);
+            });
+            actionBar.classList.remove('hidden');
+            updateProgress();
+        }
+
+        // ─── Render one card ──────────────────────────────────────────────────
+        function renderCard(id, file, originalUrl) {
+            const card = document.createElement('div');
+            card.className = 'img-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden';
+            card.id = `card-${id}`;
+            card.innerHTML = `
+            <!-- Card header -->
+            <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500 flex-shrink-0 text-sm">🖼️</div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-slate-800 truncate" title="${esc(file.name)}">${esc(file.name)}</p>
+                        <p class="text-xs text-slate-400">${fmtBytes(file.size)}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <span id="badge-${id}" class="status-badge s-pending">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span> Pending
+                    </span>
+                    <button id="btn-proc-${id}"
+                        class="text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg transition-colors"
+                        onclick="compressOne(${id})">
+                        Compress
+                    </button>
+                    <button id="btn-dl-${id}" disabled
+                        class="text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed text-emerald-700 px-3 py-1.5 rounded-lg transition-colors"
+                        onclick="downloadOne(${id})">
+                        ↓ Save
+                    </button>
+                    <button class="text-slate-400 hover:text-red-500 transition-colors p-1 rounded" title="Remove"
+                        onclick="removeCard(${id})">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Previews -->
+            <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Original</p>
+                        <button onclick="openLightbox(${id},'original')"
+                            class="text-xs text-slate-400 hover:text-indigo-500 transition-colors flex items-center gap-1 font-semibold">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                            Full size
+                        </button>
+                    </div>
+                    <div class="checker rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                        style="height:180px;" onclick="openLightbox(${id},'original')">
+                        <img src="${originalUrl}" alt="Original" style="max-width:100%;max-height:180px;object-fit:contain;">
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Compressed</p>
+                        <button id="btn-prev-${id}" onclick="openLightbox(${id},'compressed')"
+                            class="text-xs text-slate-400 hover:text-indigo-500 transition-colors flex items-center gap-1 font-semibold hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+                            Full size
+                        </button>
+                    </div>
+                    <div id="output-${id}" class="checker rounded-xl border border-slate-100 flex items-center justify-center overflow-hidden" style="height:180px;">
+                        <span class="text-sm text-slate-300 italic">Not compressed yet</span>
+                    </div>
+                    <p id="size-info-${id}" class="text-xs text-slate-400 mt-1.5 hidden"></p>
+                </div>
+            </div>`;
+            cardsGrid.appendChild(card);
+        }
+
+        // ─── Compress one ─────────────────────────────────────────────────────
+        window.compressOne = async function(id) {
+            const entry = state.files.find(f => f.id === id);
+            if (!entry || entry.status === 'working') return;
+            entry.status = 'working';
+            setBadge(id, 'working');
+            const procBtn = document.getElementById(`btn-proc-${id}`);
+            procBtn.disabled = true;
+            procBtn.innerHTML = `<span class="spinner-indigo"></span>`;
+
+            try {
+                const quality = STEPS[state.sliderStep].quality;
+                const blob    = await compressImage(entry.file, state.format, quality);
+                entry.processedBlob = blob;
+                if (entry.processedUrl) URL.revokeObjectURL(entry.processedUrl);
+                entry.processedUrl = URL.createObjectURL(blob);
+
+                const gotSmaller = blob.size < entry.file.size;
+                entry.status = gotSmaller ? 'done' : 'bigger';
+
+                // Update output panel
+                const outDiv = document.getElementById(`output-${id}`);
+                outDiv.innerHTML = `<img src="${entry.processedUrl}" alt="Compressed" style="max-width:100%;max-height:180px;object-fit:contain;" class="cursor-pointer hover:opacity-90 transition-opacity" onclick="openLightbox(${id},'compressed')">`;
+
+                // Size info line
+                const diff  = entry.file.size - blob.size;
+                const pct   = Math.round(Math.abs(diff) / entry.file.size * 100);
+                const info  = document.getElementById(`size-info-${id}`);
+                info.classList.remove('hidden');
+                if (gotSmaller) {
+                    info.innerHTML = `<span class="text-emerald-600 font-semibold">↓ ${pct}% smaller</span> — ${fmtBytes(entry.file.size)} → <strong>${fmtBytes(blob.size)}</strong>`;
+                } else {
+                    info.innerHTML = `<span class="text-red-500 font-semibold">↑ ${pct}% larger</span> — ${fmtBytes(entry.file.size)} → <strong>${fmtBytes(blob.size)}</strong> · Try WebP or higher compression`;
+                }
+
+                setBadge(id, entry.status);
+                document.getElementById(`btn-dl-${id}`).disabled = false;
+                document.getElementById(`btn-prev-${id}`).classList.remove('hidden');
+            } catch(e) {
+                entry.status = 'error';
+                setBadge(id, 'error');
+                console.error(e);
+            }
+
+            procBtn.disabled = false;
+            procBtn.textContent = 'Recompress';
+            updateProgress();
+        };
+
+        // ─── Remove card ──────────────────────────────────────────────────────
+        window.removeCard = function(id) {
+            state.files = state.files.filter(f => f.id !== id);
+            document.getElementById(`card-${id}`)?.remove();
+            if (!state.files.length) actionBar.classList.add('hidden');
+            updateProgress();
+        };
+
+        // ─── Download one ─────────────────────────────────────────────────────
+        window.downloadOne = function(id) {
+            const entry = state.files.find(f => f.id === id);
+            if (!entry?.processedBlob) return;
+            const ext  = getExt();
+            const name = entry.file.name.replace(/\.[^.]+$/, '') + '_compressed.' + ext;
+            triggerDownload(entry.processedUrl, name);
+        };
+
+        // ─── Compress All ─────────────────────────────────────────────────────
+        btnCompressAll.addEventListener('click', async () => {
+            btnCompressAll.disabled = true;
+            const pending = state.files.filter(f => f.status === 'pending' || f.status === 'bigger' || f.status === 'error');
+            for (const entry of pending) {
+                await window.compressOne(entry.id);
+            }
+            btnCompressAll.disabled = false;
+        });
+
+        // ─── Download ZIP ─────────────────────────────────────────────────────
+        btnDownloadZip.addEventListener('click', async () => {
+            const done = state.files.filter(f => f.processedBlob);
+            if (!done.length) return;
+            btnDownloadZip.innerHTML = `<div class="spinner"></div> Zipping…`;
+            btnDownloadZip.disabled = true;
+            const zip = new JSZip();
+            const ext = getExt();
+            done.forEach(entry => {
+                zip.file(entry.file.name.replace(/\.[^.]+$/, '') + '_compressed.' + ext, entry.processedBlob);
+            });
+            const content = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+            triggerDownload(URL.createObjectURL(content), 'compressed_images.zip');
+            btnDownloadZip.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download ZIP`;
+            btnDownloadZip.disabled = false;
+        });
+
+        // ─── Clear ────────────────────────────────────────────────────────────
+        btnClear.addEventListener('click', () => {
+            state.files = [];
+            state.nextId = 0;
+            cardsGrid.innerHTML = '';
+            actionBar.classList.add('hidden');
+            updateProgress();
+        });
+
+        // ─── Slider ───────────────────────────────────────────────────────────
+        compressSlider.addEventListener('input', () => {
+            const step = parseInt(compressSlider.value);
+            state.sliderStep = step;
+            qualityBadge.textContent = STEPS[step].label;
+            syncPresetHighlight(STEPS[step].preset);
+            // Mark all done cards as pending since settings changed
+            markAllPending();
+        });
+
+        // ─── Presets ──────────────────────────────────────────────────────────
+        window.applyPreset = function(preset) {
+            const map = { none: 1, low: 2, medium: 3, high: 4 };
+            const step = map[preset] ?? 2;
+            state.sliderStep      = step;
+            compressSlider.value  = step;
+            qualityBadge.textContent = STEPS[step].label;
+            syncPresetHighlight(preset);
+            markAllPending();
+        };
+
+        function syncPresetHighlight(preset) {
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`preset-${preset}`)?.classList.add('active');
+        }
+
+        // ─── Format ───────────────────────────────────────────────────────────
+        window.setFormat = function(fmt) {
+            state.format = fmt;
+            const btns  = document.querySelectorAll('.fmt-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            const order = ['image/jpeg', 'image/webp', 'image/png'];
+            const btn   = btns[order.indexOf(fmt)];
+            if (btn) btn.classList.add('active');
+
+            const note = document.getElementById('format-note');
+            if (fmt === 'image/png') {
+                note.innerHTML = '⚠️ <strong>PNG is lossless</strong> — compression setting is ignored. Output may be larger than the original JPEG.';
+                note.className = 'text-xs text-amber-700 mb-2';
+            } else if (fmt === 'image/webp') {
+                note.textContent = 'WebP typically produces 25–35% smaller files than JPEG at the same visual quality.';
+                note.className = 'text-xs text-slate-400 mb-2';
+            } else {
+                note.textContent = 'JPEG works best for photos. Switch to WebP for even better compression.';
+                note.className = 'text-xs text-slate-400 mb-2';
+            }
+
+            markAllPending();
+        };
+
+        // ─── Mark all pending (settings changed) ──────────────────────────────
+        function markAllPending() {
+            state.files.forEach(entry => {
+                if (entry.status === 'done' || entry.status === 'bigger') {
+                    entry.status = 'pending';
+                    setBadge(entry.id, 'pending');
+                    const btn = document.getElementById(`btn-proc-${entry.id}`);
+                    if (btn) { btn.disabled = false; btn.textContent = 'Recompress'; }
+                }
+            });
+            updateProgress();
+        }
+
+        // ─── Core: compress image ─────────────────────────────────────────────
+        function compressImage(file, format, quality) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const canvas = document.createElement('canvas');
+                    canvas.width  = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    if (format === 'image/jpeg') {
+                        ctx.fillStyle = '#ffffff'; // remove alpha for JPEG
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }
+                    ctx.drawImage(img, 0, 0);
+                    const q = format === 'image/png' ? undefined : quality;
+                    canvas.toBlob(
+                        blob => blob ? resolve(blob) : reject(new Error('toBlob failed')),
+                        format, q
+                    );
+                };
+                img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Load failed')); };
+                img.src = url;
+            });
+        }
+
+        // ─── Lightbox ─────────────────────────────────────────────────────────
+        window.openLightbox = function(id, which) {
+            const entry = state.files.find(f => f.id === id);
+            if (!entry) return;
+            const src = which === 'original' ? entry.originalUrl : entry.processedUrl;
+            if (!src) return;
+            const cap = which === 'original'
+                ? `Original · ${fmtBytes(entry.file.size)} · ${entry.file.name}`
+                : `Compressed · ${fmtBytes(entry.processedBlob?.size || 0)} · ${STEPS[state.sliderStep].label} compression`;
+            lightboxImg.src         = src;
+            lightboxCap.textContent = cap;
+            lightbox.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeLightbox = function(e) {
+            if (e && e.target !== lightbox && e.target.id !== 'lightbox-close') return;
+            lightbox.classList.remove('open');
+            document.body.style.overflow = '';
+        };
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeLightbox({ target: lightbox });
+        });
+
+        // ─── Helpers ──────────────────────────────────────────────────────────
+        function setBadge(id, status) {
+            const badge = document.getElementById(`badge-${id}`);
+            if (!badge) return;
+            const map = {
+                pending: { cls: 's-pending', dot: 'bg-amber-400',         label: 'Pending'       },
+                working: { cls: 's-working', dot: 'bg-indigo-400 animate-pulse', label: 'Compressing…' },
+                done:    { cls: 's-done',    dot: 'bg-emerald-500',        label: 'Done ✓'        },
+                bigger:  { cls: 's-bigger',  dot: 'bg-red-400',            label: 'Got larger'    },
+                error:   { cls: 's-error',   dot: 'bg-red-500',            label: 'Error'         },
+            };
+            const m = map[status] || map.pending;
+            badge.className = `status-badge ${m.cls}`;
+            badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${m.dot} inline-block"></span> ${m.label}`;
+        }
+
+        function updateProgress() {
+            const total = state.files.length;
+            const done  = state.files.filter(f => f.status === 'done' || f.status === 'bigger').length;
+            progressCount.textContent    = `${done} / ${total}`;
+            progressBar.style.width      = total ? (done / total * 100) + '%' : '0%';
+            progressLabel.textContent    = done === total && total > 0
+                ? 'All done!'
+                : `${total - done} image(s) pending`;
+            btnDownloadZip.disabled      = !state.files.some(f => f.processedBlob);
+        }
+
+        function getExt() {
+            return ({ 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/png': 'png' })[state.format] || 'jpg';
+        }
+
+        function triggerDownload(href, filename) {
+            const a = document.createElement('a');
+            a.href = href; a.download = filename; a.click();
+        }
+
+        function fmtBytes(b) {
+            if (b < 1024)        return b + ' B';
+            if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+            return (b / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        function esc(str) {
+            return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // Init
+        qualityBadge.textContent = STEPS[state.sliderStep].label;
+    })();
+    </script>
+</body>
+
+</html>

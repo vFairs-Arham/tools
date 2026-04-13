@@ -92,6 +92,15 @@
             box-shadow: 0 12px 32px rgba(139, 92, 246, 0.15);
         }
 
+        .mode-card.m-compress:hover {
+            border-color: #f97316;
+            box-shadow: 0 12px 32px rgba(249, 115, 22, 0.15);
+        }
+
+        .mode-card.m-compress .mode-icon {
+            background: #fff7ed;
+        }
+
         .mode-icon {
             width: 52px;
             height: 52px;
@@ -432,6 +441,15 @@
                             image</p>
                     </div>
                     <span class="text-xs font-semibold text-pink-500 mt-1">Any image →</span>
+                </div>
+
+                <div class="mode-card m-compress" onclick="window.location.href='../Image Compressor/index.html'">
+                    <div class="mode-icon">🗜️</div>
+                    <div>
+                        <p class="font-bold text-slate-800 text-base">Image Compressor</p>
+                        <p class="text-sm text-slate-500 mt-1">Reduce file size with quality control, size preview, and recompress without re-uploading</p>
+                    </div>
+                    <span class="text-xs font-semibold mt-1" style="color:#f97316;">Any image → <span class="inline-block bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ml-1">New</span></span>
                 </div>
 
                 <div class="mode-card m-radius" onclick="enterMode('radius')">
